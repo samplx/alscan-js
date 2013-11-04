@@ -20,13 +20,13 @@
 basedir=`dirname "$0"`
 SITE_CONFIG=""
 
-if [ -r "$basedir/node_modules/alscan/bin/alscan-cli.js" ]
+if [ -r "$basedir/../lib/node_modules/alscan-js/bin/alscan-cli.js" ]
 then
-    if [ -r "$basedir/node_modules/alscan/etc/config" ]
+    if [ -r "$basedir/../lib/node_modules/alscan-js/etc/config" ]
     then
-        SITE_CONFIG="--site-config=$basedir/node_modules/alscan/etc/config"
+        SITE_CONFIG="--site-config=$basedir/../lib/node_modules/alscan-js/etc/config"
     fi
-    node "$basedir/node_modules/alscan/bin/alscan-cli.js" $SITE_CONFIG "$@"
+    node "$basedir/../lib/node_modules/alscan-js/bin/alscan-cli.js" $SITE_CONFIG "$@"
 elif [ -r "$basedir/alscan-cli.js" ]
 then
     if [ -r "$basedir/../etc/config" ]
