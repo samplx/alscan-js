@@ -18,22 +18,13 @@
 #
 
 basedir=`dirname "$0"`
-SITE_CONFIG=""
 
 if [ -r "$basedir/../lib/node_modules/alscan-js/bin/alscan-cli.js" ]
 then
-    if [ -r "$basedir/../lib/node_modules/alscan-js/etc/config" ]
-    then
-        SITE_CONFIG="--site-config=$basedir/../lib/node_modules/alscan-js/etc/config"
-    fi
-    node "$basedir/../lib/node_modules/alscan-js/bin/alscan-cli.js" $SITE_CONFIG "$@"
+    node "$basedir/../lib/node_modules/alscan-js/bin/alscan-cli.js" "$@"
 elif [ -r "$basedir/alscan-cli.js" ]
 then
-    if [ -r "$basedir/../etc/config" ]
-    then
-        SITE_CONFIG="--site-config=$basedir/../etc/config"
-    fi
-    node "$basedir/alscan-cli.js" $SITE_CONFIG "$@"
+    node "$basedir/alscan-cli.js" "$@"
 else
     echo "$0: ERROR: Cannot find alscan-cli.js script." 2>&1
     exit 1
