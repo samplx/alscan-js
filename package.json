@@ -1,6 +1,6 @@
 {
     "name": "alscan-js",
-    "version": "0.3.0-alpha1",
+    "version": "0.3.0-beta",
     "description": "An access log scanner.",
     "homepage": "http://alscan.org/",
     "author": {
@@ -41,8 +41,8 @@
         "test" : "./test"
     },
     "dependencies": {
-        "samplx-agentdb" : "http://pub.samplx.org/samplx/samplx-agentdb-0.3.x.tar.gz",
-        "samplx-argv-parser" : "~ 2.0.0",
+        "samplx-agentdb" : "0.3.x",
+        "samplx-argv-parser" : "~ 2.0.1",
         "js-yaml" : "~ 2.1.2",
         "underscore" : "~ 1.5.2",
         "when" : "~ 2.5.1",
@@ -53,7 +53,7 @@
     },
     "devDependencies": {
         "alscan-test-data" : "http://pub.samplx.org/samplx/alscan-test-data-0.3.0-alpha1.tar.gz",
-        "buster-node": "0.1"
+        "buster": "~ 0.7.7"
     },
     "readmeFilename": "README.md",
     "bugs": {
