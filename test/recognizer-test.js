@@ -55,20 +55,20 @@ buster.testCase("recognizer", {
     },
     
     "test matches method=POST": function () {
-        this.r.addValue('method', 'POST');
+        this.r.addValueNC('method', 'post');
         
         assert(this.r.matches(this.record));
     },
     
     "test matches method=GET": function () {
-        this.r.addValue('method', 'GET');
+        this.r.addValueNC('method', 'get');
         
         refute(this.r.matches(this.record));
     },
     
     "test matches method=GET|POST": function () {
-        this.r.addValue('method', 'GET');
-        this.r.addValue('method', 'POST');
+        this.r.addValueNC('method', 'GET');
+        this.r.addValueNC('method', 'POST');
         
         assert(this.r.matches(this.record));
     },
