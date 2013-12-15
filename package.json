@@ -1,6 +1,6 @@
 {
     "name": "alscan-js",
-    "version": "0.3.0-beta",
+    "version": "0.3.0-beta2",
     "description": "An access log scanner.",
     "homepage": "http://alscan.org/",
     "author": {
