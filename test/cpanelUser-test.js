@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 fileencoding=utf-8 : */
 /*
- *     Copyright 2013 James Burlingame
+ *     Copyright 2013, 2014 James Burlingame
  *
  *     Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -107,7 +107,7 @@ buster.testCase("cpanelUser", {
         });
     },
 
-    "test findDomainLogFiles, addon domain": function () {
+    "test findDomainLogFiles, addon domain": function (done) {
         var promise = this.c.findDomainLogFiles('alscan-org.druiddesigns.com');
         var expected = [ 
             { file: "/home1/druid/access-logs/alscan-org.druiddesigns.com", domain: "alscan-org.druiddesigns.com" }
@@ -135,7 +135,7 @@ buster.testCase("cpanelUser", {
         });
     },
     
-    "test findDomainLogFiles, subdomain": function () {
+    "test findDomainLogFiles, subdomain": function (done) {
         var promise = this.c.findDomainLogFiles('redmine.druiddesigns.com');
         var expected = [ { file: "/home1/druid/access-logs/redmine.druiddesigns.com", domain: "redmine.druiddesigns.com" } ];
         assert(when.isPromiseLike(promise));
@@ -161,7 +161,7 @@ buster.testCase("cpanelUser", {
         });
     },
     
-    "test findDomainLogFiles, nonexistant domain": function () {
+    "test findDomainLogFiles, nonexistant domain": function (done) {
         var promise = this.c.findDomainLogFiles('nonesuch.info');
         assert(when.isPromiseLike(promise));
         promise.then(function (results) {

@@ -7,5 +7,5 @@ config["Alscan tests"] = {
 	tests: [
 		"test/*-test.js"
 	]
-}
+};
 

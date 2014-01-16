@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 fileencoding=utf-8 : */
 /*
- *     Copyright 2013 James Burlingame
+ *     Copyright 2013, 2014 James Burlingame
  *
  *     Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -73,7 +73,7 @@ buster.testCase("reporter", {
         var day;
         for (month=0; month < 12; month++) {
             day = 1;
-            time = new Date(Date.UTC(2010, month, day, 12, 34, 56, 0))
+            time = new Date(Date.UTC(2010, month, day, 12, 34, 56, 0));
             timeString = time.toString();
             timestamp = this.r.getTimestamp(time);
             assert.equals(timestamp.substr(0, 2), timeString.substr(8, 2));
@@ -90,8 +90,8 @@ buster.testCase("reporter", {
             assert.equals(timestamp.substr(20, 1), ' ');
             assert.equals(timestamp.substr(21, 5), timeString.substr(28, 5));
             day = 10;
-            time = new Date(Date.UTC(2010, month, day, 12, 34, 56, 0))
-            time = new Date(Date.UTC(2010, month, day, 12, 34, 56, 0))
+            time = new Date(Date.UTC(2010, month, day, 12, 34, 56, 0));
+            time = new Date(Date.UTC(2010, month, day, 12, 34, 56, 0));
             timeString = time.toString();
             timestamp = this.r.getTimestamp(time);
             assert.equals(timestamp.substr(0, 2), timeString.substr(8, 2));

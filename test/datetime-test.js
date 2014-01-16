@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 fileencoding=utf-8 : */
 /*
- *     Copyright 2013 James Burlingame
+ *     Copyright 2013, 2014 James Burlingame
  *
  *     Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -1330,7 +1330,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(stop=day 2013/01/31)": function () {
-        this.stop.year = 2013
+        this.stop.year = 2013;
         this.stop.month = 0;
         this.stop.day = 31;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -1341,7 +1341,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(stop=day 2013/01/32)": function () {
-        this.stop.year = 2013
+        this.stop.year = 2013;
         this.stop.month = 0;
         this.stop.day = 32;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -1355,7 +1355,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(stop=day 2013/02/29)": function () {
-        this.stop.year = 2013
+        this.stop.year = 2013;
         this.stop.month = 1;
         this.stop.day = 29;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -1369,7 +1369,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(stop=day 2012/02/29)": function () {
-        this.stop.year = 2012
+        this.stop.year = 2012;
         this.stop.month = 1;
         this.stop.day = 29;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -1380,7 +1380,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(stop=day 2012/02/30)": function () {
-        this.stop.year = 2012
+        this.stop.year = 2012;
         this.stop.month = 1;
         this.stop.day = 30;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -1394,7 +1394,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(stop=day 2000/02/29)": function () {
-        this.stop.year = 2000
+        this.stop.year = 2000;
         this.stop.month = 1;
         this.stop.day = 29;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -1405,7 +1405,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(stop=day 2000/02/30)": function () {
-        this.stop.year = 2000
+        this.stop.year = 2000;
         this.stop.month = 1;
         this.stop.day = 30;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -1419,7 +1419,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(stop=day 2100/02/28)": function () {
-        this.stop.year = 2100
+        this.stop.year = 2100;
         this.stop.month = 1;
         this.stop.day = 28;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -1430,7 +1430,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(stop=day 2100/02/29)": function () {
-        this.stop.year = 2100
+        this.stop.year = 2100;
         this.stop.month = 1;
         this.stop.day = 29;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -1444,7 +1444,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(stop=day 2013/03/31)": function () {
-        this.stop.year = 2013
+        this.stop.year = 2013;
         this.stop.month = 2;
         this.stop.day = 31;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -1455,7 +1455,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(stop=day 2013/03/32)": function () {
-        this.stop.year = 2013
+        this.stop.year = 2013;
         this.stop.month = 2;
         this.stop.day = 32;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -1469,7 +1469,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(stop=day 2013/04/30)": function () {
-        this.stop.year = 2013
+        this.stop.year = 2013;
         this.stop.month = 3;
         this.stop.day = 30;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -1480,7 +1480,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(stop=day 2013/04/31)": function () {
-        this.stop.year = 2013
+        this.stop.year = 2013;
         this.stop.month = 3;
         this.stop.day = 31;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -1494,7 +1494,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(stop=day 2013/05/31)": function () {
-        this.stop.year = 2013
+        this.stop.year = 2013;
         this.stop.month = 4;
         this.stop.day = 31;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -1505,7 +1505,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(stop=day 2013/05/32)": function () {
-        this.stop.year = 2013
+        this.stop.year = 2013;
         this.stop.month = 4;
         this.stop.day = 32;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -1519,7 +1519,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(stop=day 2013/06/30)": function () {
-        this.stop.year = 2013
+        this.stop.year = 2013;
         this.stop.month = 5;
         this.stop.day = 30;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -1530,7 +1530,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(stop=day 2013/06/31)": function () {
-        this.stop.year = 2013
+        this.stop.year = 2013;
         this.stop.month = 5;
         this.stop.day = 31;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -1544,7 +1544,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(stop=day 2013/07/31)": function () {
-        this.stop.year = 2013
+        this.stop.year = 2013;
         this.stop.month = 6;
         this.stop.day = 31;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -1555,7 +1555,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(stop=day 2013/07/32)": function () {
-        this.stop.year = 2013
+        this.stop.year = 2013;
         this.stop.month = 6;
         this.stop.day = 32;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -1569,7 +1569,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(stop=day 2013/08/31)": function () {
-        this.stop.year = 2013
+        this.stop.year = 2013;
         this.stop.month = 7;
         this.stop.day = 31;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -1580,7 +1580,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(stop=day 2013/08/32)": function () {
-        this.stop.year = 2013
+        this.stop.year = 2013;
         this.stop.month = 7;
         this.stop.day = 32;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -1594,7 +1594,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(stop=day 2013/09/30)": function () {
-        this.stop.year = 2013
+        this.stop.year = 2013;
         this.stop.month = 8;
         this.stop.day = 30;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -1605,7 +1605,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(stop=day 2013/09/31)": function () {
-        this.stop.year = 2013
+        this.stop.year = 2013;
         this.stop.month = 8;
         this.stop.day = 31;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -1619,7 +1619,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(stop=day 2013/10/31)": function () {
-        this.stop.year = 2013
+        this.stop.year = 2013;
         this.stop.month = 9;
         this.stop.day = 31;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -1630,7 +1630,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(stop=day 2013/10/32)": function () {
-        this.stop.year = 2013
+        this.stop.year = 2013;
         this.stop.month = 9;
         this.stop.day = 32;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -1644,7 +1644,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(stop=day 2013/11/30)": function () {
-        this.stop.year = 2013
+        this.stop.year = 2013;
         this.stop.month = 10;
         this.stop.day = 30;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -1655,7 +1655,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(stop=day 2013/11/31)": function () {
-        this.stop.year = 2013
+        this.stop.year = 2013;
         this.stop.month = 10;
         this.stop.day = 31;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -1669,7 +1669,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(stop=day 2013/12/31)": function () {
-        this.stop.year = 2013
+        this.stop.year = 2013;
         this.stop.month = 11;
         this.stop.day = 31;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -1680,7 +1680,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(stop=day 2013/12/32)": function () {
-        this.stop.year = 2013
+        this.stop.year = 2013;
         this.stop.month = 11;
         this.stop.day = 32;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -1994,7 +1994,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(start=day 2013/01/31)": function () {
-        this.start.year = 2013
+        this.start.year = 2013;
         this.start.month = 0;
         this.start.day = 31;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -2005,7 +2005,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(start=day 2013/01/32)": function () {
-        this.start.year = 2013
+        this.start.year = 2013;
         this.start.month = 0;
         this.start.day = 32;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -2019,7 +2019,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(start=day 2013/02/29)": function () {
-        this.start.year = 2013
+        this.start.year = 2013;
         this.start.month = 1;
         this.start.day = 29;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -2033,7 +2033,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(start=day 2012/02/29)": function () {
-        this.start.year = 2012
+        this.start.year = 2012;
         this.start.month = 1;
         this.start.day = 29;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -2044,7 +2044,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(start=day 2012/02/30)": function () {
-        this.start.year = 2012
+        this.start.year = 2012;
         this.start.month = 1;
         this.start.day = 30;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -2058,7 +2058,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(start=day 2000/02/29)": function () {
-        this.start.year = 2000
+        this.start.year = 2000;
         this.start.month = 1;
         this.start.day = 29;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -2069,7 +2069,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(start=day 2000/02/30)": function () {
-        this.start.year = 2000
+        this.start.year = 2000;
         this.start.month = 1;
         this.start.day = 30;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -2086,7 +2086,7 @@ buster.testCase("datetime", {
         this.stop.year = 2100;
         this.stop.month = 11;
         this.stop.day = 31;
-        this.start.year = 2100
+        this.start.year = 2100;
         this.start.month = 1;
         this.start.day = 28;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -2097,7 +2097,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(start=day 2100/02/29)": function () {
-        this.start.year = 2100
+        this.start.year = 2100;
         this.start.month = 1;
         this.start.day = 29;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -2111,7 +2111,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(start=day 2013/03/31)": function () {
-        this.start.year = 2013
+        this.start.year = 2013;
         this.start.month = 2;
         this.start.day = 31;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -2122,7 +2122,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(start=day 2013/03/32)": function () {
-        this.start.year = 2013
+        this.start.year = 2013;
         this.start.month = 2;
         this.start.day = 32;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -2136,7 +2136,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(start=day 2013/04/30)": function () {
-        this.start.year = 2013
+        this.start.year = 2013;
         this.start.month = 3;
         this.start.day = 30;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -2147,7 +2147,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(start=day 2013/04/31)": function () {
-        this.start.year = 2013
+        this.start.year = 2013;
         this.start.month = 3;
         this.start.day = 31;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -2161,7 +2161,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(start=day 2013/05/31)": function () {
-        this.start.year = 2013
+        this.start.year = 2013;
         this.start.month = 4;
         this.start.day = 31;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -2172,7 +2172,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(start=day 2013/05/32)": function () {
-        this.start.year = 2013
+        this.start.year = 2013;
         this.start.month = 4;
         this.start.day = 32;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -2186,7 +2186,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(start=day 2013/06/30)": function () {
-        this.start.year = 2013
+        this.start.year = 2013;
         this.start.month = 5;
         this.start.day = 30;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -2197,7 +2197,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(start=day 2013/06/31)": function () {
-        this.start.year = 2013
+        this.start.year = 2013;
         this.start.month = 5;
         this.start.day = 31;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -2211,7 +2211,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(start=day 2013/07/31)": function () {
-        this.start.year = 2013
+        this.start.year = 2013;
         this.start.month = 6;
         this.start.day = 31;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -2222,7 +2222,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(start=day 2013/07/32)": function () {
-        this.start.year = 2013
+        this.start.year = 2013;
         this.start.month = 6;
         this.start.day = 32;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -2236,7 +2236,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(start=day 2013/08/31)": function () {
-        this.start.year = 2013
+        this.start.year = 2013;
         this.start.month = 7;
         this.start.day = 31;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -2247,7 +2247,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(start=day 2013/08/32)": function () {
-        this.start.year = 2013
+        this.start.year = 2013;
         this.start.month = 7;
         this.start.day = 32;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -2261,7 +2261,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(start=day 2013/09/30)": function () {
-        this.start.year = 2013
+        this.start.year = 2013;
         this.start.month = 8;
         this.start.day = 30;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -2272,7 +2272,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(start=day 2013/09/31)": function () {
-        this.start.year = 2013
+        this.start.year = 2013;
         this.start.month = 8;
         this.start.day = 31;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -2286,7 +2286,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(start=day 2012/10/31)": function () {
-        this.start.year = 2012
+        this.start.year = 2012;
         this.start.month = 9;
         this.start.day = 31;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -2297,7 +2297,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(start=day 2012/10/32)": function () {
-        this.start.year = 2012
+        this.start.year = 2012;
         this.start.month = 9;
         this.start.day = 32;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -2311,7 +2311,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(start=day 2012/11/30)": function () {
-        this.start.year = 2012
+        this.start.year = 2012;
         this.start.month = 10;
         this.start.day = 30;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -2322,7 +2322,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(start=day 2012/11/31)": function () {
-        this.start.year = 2012
+        this.start.year = 2012;
         this.start.month = 10;
         this.start.day = 31;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -2336,7 +2336,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(start=day 2012/12/31)": function () {
-        this.start.year = 2012
+        this.start.year = 2012;
         this.start.month = 11;
         this.start.day = 31;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
@@ -2347,7 +2347,7 @@ buster.testCase("datetime", {
     },
     
     "test calculateStartStop(start=day 2012/12/32)": function () {
-        this.start.year = 2012
+        this.start.year = 2012;
         this.start.month = 11;
         this.start.day = 32;
         var startStop = this.d.calculateStartStop(this.start, this.stop, 60);
