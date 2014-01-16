@@ -1,6 +1,6 @@
 {
     "name": "alscan-js",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "description": "An access log scanner.",
     "homepage": "http://alscan.org/",
     "author": {
@@ -53,7 +53,8 @@
     },
     "devDependencies": {
         "alscan-test-data" : "http://pub.samplx.org/samplx/alscan-test-data-0.3.0.tar.gz",
-        "buster": "~ 0.7.7"
+        "buster": "~ 0.7.7",
+        "jshint": "~ 2.4.1"
     },
     "readmeFilename": "README.md",
     "bugs": {
