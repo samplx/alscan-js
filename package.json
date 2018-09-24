@@ -1,6 +1,6 @@
 {
     "name": "alscan-js",
-    "version": "0.3.1",
+    "version": "0.4.0",
     "description": "An access log scanner.",
     "homepage": "http://alscan.org/",
     "author": {
@@ -23,42 +23,48 @@
         "type": "git",
         "url": "https://github.com/samplx/alscan-js.git"
     },
-    "license": {
-        "type": "Apache 2.0",
-        "url": "https://github.com/samplx/alscan-js/blob/master/LICENSE"
+    "license": "Apache-2.0",
+    "bin": {
+        "alscan": "./bin/alscan",
+        "alscan-js": "./bin/alscan"
     },
-    "bin": { 
-        "alscan" : "./bin/alscan",
-        "alscan-js" : "./bin/alscan"
-    },
-    "preferGlobal" : true,
+    "preferGlobal": true,
     "scripts": {
-        "test": "node run-tests.js"
+        "test": "gulp test"
     },
-    "directories" : {
-        "lib" : "./lib",
-        "bin" : "./bin",
-        "test" : "./test"
+    "directories": {
+        "lib": "./lib",
+        "bin": "./bin",
+        "test": "./__tests__"
     },
     "dependencies": {
-        "samplx-agentdb" : "0.3.x",
-        "samplx-argv-parser" : "~ 2.0.2",
-        "js-yaml" : "~ 2.1.2",
-        "underscore" : "~ 1.5.2",
-        "when" : "~ 2.5.1",
-        "utmp" : "~ 0.1.0"
+        "ajv": "^5.0.0",
+        "js-yaml": "~ 3.12.0",
+        "lodash": "~ 4.17.10",
+        "samplx-agentdb": "0.3.x",
+        "samplx-argv-parser": "~ 2.3.1",
+        "when": "~ 3.7.8"
+    },
+    "optionalDependencies": {
+        "samplx-utmp": "~0.2.1"
     },
     "engines": {
-        "node" : ">= 0.10.0"
+        "node": ">= 6.0"
     },
     "devDependencies": {
-        "alscan-test-data" : "http://pub.samplx.org/samplx/alscan-test-data-0.3.0.tar.gz",
-        "buster": "~ 0.7.7",
-        "jshint": "~ 2.4.1"
+        "gulp": "^4.0.0",
+        "gulp-jest": "^4.0.2",
+        "jest": "^23.4.0",
+        "jest-cli": "^23.4.0",
+        "gulp-eslint": "^4.0.2",
+        "eslint": "^5.0.1"
     },
     "readmeFilename": "README.md",
     "bugs": {
         "url": "https://github.com/samplx/alscan/issues",
-        "email" : "bugs@samplx.org"
+        "email": "bugs@samplx.org"
+    },
+    "jest": {
+        "coverageReporters": [ "json", "html", "text" ]
     }
 }
