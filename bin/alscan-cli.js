@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 fileencoding=utf-8 : */
 /*
- *     Copyright 2013 James Burlingame
+ *     Copyright 2013, 2018 James Burlingame
  *
  *     Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -16,12 +16,12 @@
  *     limitations under the License.
  *
  */
- 
+
 (function () {
     process.title = 'alscan';
-    
+
     var alscan = require('../lib/alscan.js');
-    
-    alscan.main();
- }).call(this);
- 
+
+    alscan.main(process.argv);
+}).call(this);
+
