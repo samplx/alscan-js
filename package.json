@@ -25,8 +25,8 @@
     },
     "license": "Apache-2.0",
     "bin": {
-        "alscan": "./bin/alscan",
-        "alscan-js": "./bin/alscan"
+        "alscan": "./bin/alscan-cli.js",
+        "alscan-js": "./bin/alscan-cli.js"
     },
     "preferGlobal": true,
     "scripts": {

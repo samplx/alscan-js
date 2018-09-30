@@ -20,7 +20,7 @@
 (function () {
     process.title = 'alscan';
 
-    var alscan = require('../lib/alscan.js');
+    const alscan = require('../lib/alscan.js');
 
     alscan.main(process.argv);
 }).call(this);
