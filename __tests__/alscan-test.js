@@ -167,6 +167,7 @@ describe('alscan', () => {
         test('no args sets default level', (done) => {
             const args = alscan.initializeArgs(argvParser, false, false, false, false, false);
             args.parse([], (errors, options) => {
+                expect(errors).toBeNull();
                 expect(options).toBeDefined();
                 const level = alscan.getVerboseLevel(options);
                 expect(level).toBe(1);
@@ -177,6 +178,7 @@ describe('alscan', () => {
         test('--terse set zero', (done) => {
             const args = alscan.initializeArgs(argvParser, false, false, false, false, false);
             args.parse(['--quiet'], (errors, options) => {
+                expect(errors).toBeNull();
                 expect(options).toBeDefined();
                 const level = alscan.getVerboseLevel(options);
                 expect(level).toBe(0);
@@ -187,6 +189,7 @@ describe('alscan', () => {
         test('--verbose once set two', (done) => {
             const args = alscan.initializeArgs(argvParser, false, false, false, false, false);
             args.parse(['--verbose'], (errors, options) => {
+                expect(errors).toBeNull();
                 expect(options).toBeDefined();
                 const level = alscan.getVerboseLevel(options);
                 expect(level).toBe(2);
@@ -197,6 +200,7 @@ describe('alscan', () => {
         test('--verbose twice sets 3', (done) => {
             const args = alscan.initializeArgs(argvParser, false, false, false, false, false);
             args.parse(['--verbose', '--verbose'], (errors, options) => {
+                expect(errors).toBeNull();
                 expect(options).toBeDefined();
                 const level = alscan.getVerboseLevel(options);
                 expect(level).toBe(3);
@@ -209,6 +213,7 @@ describe('alscan', () => {
         test('deny', (done) => {
             const args = alscan.initializeArgs(argvParser, false, false, false, false, false);
             args.parse(['--deny'], (errors, options) => {
+                expect(errors).toBeNull();
                 expect(options).toBeDefined();
                 expect(options['--deny']).toBeDefined();
                 expect(options['--deny'].isSet).toBeTruthy();
@@ -222,6 +227,7 @@ describe('alscan', () => {
         test('downtime default slot-width', (done) => {
             const args = alscan.initializeArgs(argvParser, false, false, false, false, false);
             args.parse(['--downtime'], (errors, options) => {
+                expect(errors).toBeNull();
                 expect(options).toBeDefined();
                 expect(options['--downtime']).toBeDefined();
                 expect(options['--downtime'].isSet).toBeTruthy();
@@ -236,6 +242,7 @@ describe('alscan', () => {
         test('downtime defined slot-width', (done) => {
             const args = alscan.initializeArgs(argvParser, false, false, false, false, false);
             args.parse(['--downtime', '--time-slot', '3600'], (errors, options) => {
+                expect(errors).toBeNull();
                 expect(options).toBeDefined();
                 expect(options['--downtime']).toBeDefined();
                 expect(options['--downtime'].isSet).toBeTruthy();
@@ -250,6 +257,7 @@ describe('alscan', () => {
         test('request', (done) => {
             const args = alscan.initializeArgs(argvParser, false, false, false, false, false);
             args.parse(['--request'], (errors, options) => {
+                expect(errors).toBeNull();
                 expect(options).toBeDefined();
                 expect(options['--request']).toBeDefined();
                 expect(options['--request'].isSet).toBeTruthy();
@@ -263,6 +271,7 @@ describe('alscan', () => {
         test('summary', (done) => {
             const args = alscan.initializeArgs(argvParser, false, false, false, false, false);
             args.parse([], (errors, options) => {
+                expect(errors).toBeNull();
                 expect(options).toBeDefined();
                 const reporter = alscan.getReporter(options, false, 1);
                 expect(reporter).toBeDefined();
@@ -275,6 +284,7 @@ describe('alscan', () => {
         test('summary --terse', (done) => {
             const args = alscan.initializeArgs(argvParser, false, false, false, false, false);
             args.parse(['--terse'], (errors, options) => {
+                expect(errors).toBeNull();
                 expect(options).toBeDefined();
                 const reporter = alscan.getReporter(options, false, 1);
                 expect(reporter).toBeDefined();
@@ -288,6 +298,7 @@ describe('alscan', () => {
         test('summary --fs', (done) => {
             const args = alscan.initializeArgs(argvParser, false, false, false, false, false);
             args.parse(['--fs', '|'], (errors, options) => {
+                expect(errors).toBeNull();
                 expect(options).toBeDefined();
                 const reporter = alscan.getReporter(options, false, 1);
                 expect(reporter).toBeDefined();
