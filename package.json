@@ -54,8 +54,8 @@
     "devDependencies": {
         "gulp": "^4.0.0",
         "gulp-jest": "^4.0.2",
-        "jest": "^23.4.0",
-        "jest-cli": "^23.4.0",
+        "jest": "^23.6.0",
+        "jest-cli": "^23.6.0",
         "gulp-eslint": "^4.0.2",
         "eslint": "^5.0.1"
     },
