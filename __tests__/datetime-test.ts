@@ -18,12 +18,7 @@
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import * as fs from "node:fs";
-import * as os from "node:os";
-import * as path from "node:path";
-import { getDataDirectory } from "../test/testData.ts";
 import { calcDay, calcHours, calcMinutes, calcMonth, calcSeconds, calcStartDate, calcTimezone, calculateStartStop, calculateStartStopNow, calcYear, dateFactory, PartialDate, validateDateSettings } from "../lib/datetime.ts";
-import { setRootDirectory } from "../lib/scanfile.ts";
 
 function checkStopFunc(
     func: (stop: PartialDate) => void,
@@ -614,6 +609,7 @@ describe('datetime', () => {
                 assert.ok(Array.isArray(actual));
                 assert.equal(actual.length, row.xlength);
                 if (actual.length > 0) {
+                    assert.ok(actual[0]);
                     assert.equal(actual[0].message, row.xmessage);
                 }
             });

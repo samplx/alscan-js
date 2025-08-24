@@ -18,7 +18,6 @@
 
 import { test, describe, beforeEach } from "node:test";
 import assert from "node:assert/strict";
-import * as path from "node:path";
 
 import { getRootPathname, setRootDirectory, ScanFile } from "../lib/scanfile.ts";
 import { PanelAccess } from "../lib/panel-access.ts";
@@ -72,22 +71,22 @@ describe('defaultPanel', () => {
     function checkPromise(actual: Array<ScanFile>, expected: Array<ExpectedRow>): void {
         assert.ok(Array.isArray(actual));
         for (let n=0; n < expected.length; n++) {
-            expected[n].found = false;
+            expected[n]!.found = false;
         }
         for (const row of actual) {
             assert.ok(row instanceof ScanFile);
             for (let n=0; n < expected.length; n++) {
-                if (expected[n].filename === row.filename) {
-                    expected[n].found = true;
-                    assert.equal(row.domain, expected[n].domain);
+                if (expected[n]!.filename === row.filename) {
+                    expected[n]!.found = true;
+                    assert.equal(row.domain, expected[n]!.domain);
                 }
             }
         }
         for (let n=0; n < expected.length; n++) {
-            if (!expected[n].found) {
-                console.log(`checkPromise: missing filename ${expected[n].filename}, domain ${expected[n].domain}`);
+            if (!expected[n]!.found) {
+                console.log(`checkPromise: missing filename ${expected[n]!.filename}, domain ${expected[n]!.domain}`);
             }
-            assert.ok(expected[n].found);
+            assert.ok(expected[n]!.found);
         }
     }
 

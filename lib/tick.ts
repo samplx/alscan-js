@@ -28,7 +28,7 @@
 export class Tick {
     time: number;
     size: number;
-    item?: string;
+    item?: string | undefined;
 
     constructor(
         time: number,

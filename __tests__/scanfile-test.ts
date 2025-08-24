@@ -86,7 +86,7 @@ describe('scanfile', () => {
             setRootDirectory(getDataDirectory());
 
             assert.throws(() => {
-                const _file = new ScanFile(undefined, undefined, 'samplx.org');
+                new ScanFile(undefined, undefined, 'samplx.org');
             });
         });
 

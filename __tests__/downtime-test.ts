@@ -33,7 +33,7 @@ describe('downtime', () => {
         let r: DowntimeReport;
         beforeEach(() => {
             r = new DowntimeReport();
-            r.output = mock.fn((s: string) => {});
+            r.output = mock.fn((_: string) => {});
             r.limit = Infinity;
             r.category = 'agent';
             r.start = new Date(Date.UTC(2001, 0, 1, 0, 0, 0, 0));
@@ -45,6 +45,7 @@ describe('downtime', () => {
             const output = r.output as test.Mock<(s: string) => void>;
             assert.equal(output.mock.callCount(), 1);
             const call = output.mock.calls[0];
+            assert.ok(call);
             assert.equal(call.arguments[0], 'No entires match search criteria.');
         });
         test('single tick', () => {

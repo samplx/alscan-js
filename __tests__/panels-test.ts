@@ -94,32 +94,38 @@ describe('panels', () => {
             options: AlscanOptions,
             expected: Array<ExpectedRow>
         ): Promise<void> {
+            if (!expected || !Array.isArray(expected)) {
+                return;
+            }
             const list = await p.findScanFiles(options);
             // console.log({list});
             for (let n=0; n < expected.length; n++) {
-                expected[n].found = false;
+                if (expected[n]) {
+                    expected[n]!.found = false;
+
+                }
             }
             for (let n=0; n < list.length; n++) {
                 assert.ok(list[n] instanceof ScanFile);
                 let found = false;
                 for (let i=0; i < expected.length; i++) {
-                    if (expected[i].filename === list[n].filename) {
-                        assert.equal(expected[i].domain, list[n].domain);
-                        expected[i].found = true;
+                    if (expected[i]!.filename === list[n]!.filename) {
+                        assert.equal(expected[i]!.domain, list[n]!.domain);
+                        expected[i]!.found = true;
                         found = true;
                         break;
                     }
                 }
                 if (!found) {
-                    console.error(`not found ${list[n].filename}`);
+                    console.error(`not found ${list[n]!.filename}`);
                 }
                 assert.ok(found);
             }
             for (let n=0; n < expected.length; n++) {
-                if (!expected[n].found) {
-                    console.error(`missing ${expected[n].filename}`);
+                if (!expected[n]!.found) {
+                    console.error(`missing ${expected[n]!.filename}`);
                 }
-                assert.ok(expected[n].found);
+                assert.ok(expected[n]!.found);
             }
         }
 

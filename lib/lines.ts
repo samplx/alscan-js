@@ -39,7 +39,7 @@ export class LineStream extends stream.Transform {
      *  @param encoding of the stream.
      *  @param done callback.
      */
-    _transform(chunk: Buffer | string | any, _encoding: string, done: Function) {
+    override _transform(chunk: Buffer | string | any, _encoding: string, done: Function) {
         let first = 0;
         for (let n=0; n < chunk.length; n++) {
             if (chunk[n] == NL) {
@@ -64,7 +64,7 @@ export class LineStream extends stream.Transform {
      *  Stream filter standard _flush function.
      *  @param done callback.
      */
-    _flush(done: Function): void {
+    override _flush(done: Function): void {
         if (this._buffer.length > 0) {
             this.push(this._buffer);
         }

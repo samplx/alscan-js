@@ -36,7 +36,7 @@ describe('cPanelUser', () => {
     beforeEach(() => {
         const pathname = path.join(getDataDirectory(), 'cpanel');
         setRootDirectory(pathname);
-        process.env.ALSCAN_TESTING_HOME = '/home1/druid';
+        process.env['ALSCAN_TESTING_HOME'] = '/home1/druid';
         c = new CPanelUserAccess();
     });
 
@@ -79,22 +79,22 @@ describe('cPanelUser', () => {
     function checkPromise(actual: Array<ScanFile>, expected: Array<ExpectedRow>): void {
         assert.ok(Array.isArray(actual));
         for (let n=0; n < expected.length; n++) {
-            expected[n].found = false;
+            expected[n]!.found = false;
         }
         for (const row of actual) {
             assert.ok(row instanceof ScanFile);
             for (let n=0; n < expected.length; n++) {
-                if (expected[n].filename === row.filename) {
-                    expected[n].found = true;
-                    assert.equal(row.domain, expected[n].domain);
+                if (expected[n]!.filename === row.filename) {
+                    expected[n]!.found = true;
+                    assert.equal(row.domain, expected[n]!.domain);
                 }
             }
         }
         for (let n=0; n < expected.length; n++) {
-            if (!expected[n].found) {
-                console.log(`checkPromise: missing filename ${expected[n].filename}, domain ${expected[n].domain}`);
+            if (!expected[n]!.found) {
+                console.log(`checkPromise: missing filename ${expected[n]!.filename}, domain ${expected[n]!.domain}`);
             }
-            assert.ok(expected[n].found);
+            assert.ok(expected[n]!.found);
         }
     }
 

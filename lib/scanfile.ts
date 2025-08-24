@@ -24,7 +24,7 @@ import * as process from "node:process";
  *  @param dir new root directory.
  */
 export function setRootDirectory(dir: string): void {
-    process.env.ALSCAN_TESTING_ROOTDIR = dir;
+    process.env['ALSCAN_TESTING_ROOTDIR'] = dir;
 }
 
 /**
@@ -35,8 +35,8 @@ export function getRootPathname(filename: string): string {
     if (filename == '-') {
         return '/dev/fd/0';
     }
-    if ((filename[0] == path.sep) && process.env.ALSCAN_TESTING_ROOTDIR) {
-        return path.normalize(path.join(process.env.ALSCAN_TESTING_ROOTDIR, filename));
+    if ((filename[0] == path.sep) && process.env['ALSCAN_TESTING_ROOTDIR']) {
+        return path.normalize(path.join(process.env['ALSCAN_TESTING_ROOTDIR'], filename));
     }
     return path.normalize(filename);
 }
@@ -51,7 +51,7 @@ export function getRootPathname(filename: string): string {
 export class ScanFile {
     filename: string;
     pathname: string;
-    domain?: string;
+    domain?: string | undefined;
 
     constructor(filename?: string, pathname?: string, domain?: string) {
         if (filename) {
@@ -63,9 +63,9 @@ export class ScanFile {
             }
         } else if (pathname) {
             this.pathname = pathname;
-            if (process.env.ALSCAN_TESTING_ROOTDIR &&
-                (pathname.substring(0, process.env.ALSCAN_TESTING_ROOTDIR.length) == process.env.ALSCAN_TESTING_ROOTDIR)) {
-                this.filename = pathname.slice(process.env.ALSCAN_TESTING_ROOTDIR.length);
+            if (process.env['ALSCAN_TESTING_ROOTDIR'] &&
+                (pathname.substring(0, process.env['ALSCAN_TESTING_ROOTDIR'].length) == process.env['ALSCAN_TESTING_ROOTDIR'])) {
+                this.filename = pathname.slice(process.env['ALSCAN_TESTING_ROOTDIR'].length);
             } else if (pathname == '/dev/fd/0') {
                 this.filename = '-';
             } else {

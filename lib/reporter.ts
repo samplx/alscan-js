@@ -263,7 +263,7 @@ export class Reporter {
      *  Create report (override).
      *  @param ticks data to report.
      */
-    report(ticks: Array<Tick>): void {
+    report(_ticks: Array<Tick>): void {
 
     }
 

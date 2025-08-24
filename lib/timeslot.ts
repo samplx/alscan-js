@@ -24,7 +24,7 @@ import sortOn from "sort-on";
  *  @arg tick first tick in the slot.
  */
 class SlotItem {
-    title?: string;
+    title?: string | undefined;
     count: number;
     currentCount: number;
     peakCount: number;
@@ -90,7 +90,7 @@ export class TimeSlot {
     lastTime: number;
     options: any;
     items: Array<SlotItem>;
-    totals?: SlotItem;
+    totals?: SlotItem | undefined;
 
     constructor(
         ticks: Array<Tick>,
@@ -104,9 +104,15 @@ export class TimeSlot {
         this.firstIndex = firstIndex;
         this.lastIndex = lastIndex;
         this.startTime = startTime;
-        this.firstTime = ticks[firstIndex].time;
+        if ((firstIndex < 0) || (firstIndex >= ticks.length)) {
+            throw new RangeError(`firstIndex must be in range`);
+        }
+        if ((lastIndex < 0) || (lastIndex >= ticks.length) || (lastIndex < firstIndex)) {
+            throw new RangeError(`lastIndex must be in range`);
+        }
+        this.firstTime = ticks[firstIndex]!.time;
         this.stopTime = stopTime;
-        this.lastTime = ticks[lastIndex].time;
+        this.lastTime = ticks[lastIndex]!.time;
         this.options = options;
         this.totals = undefined;
         this.items = [];
@@ -119,7 +125,7 @@ export class TimeSlot {
      */
     find(tick: Tick): number {
         for (let n=0; n < this.items.length; n++) {
-            if (this.items[n].title == tick.item) {
+            if (this.items[n]!.title == tick.item) {
                 return n;
             }
         }
@@ -135,7 +141,7 @@ export class TimeSlot {
         if ((index < 0) || (index >= this.items.length)) {
             throw new RangeError('index is out-of-bounds.');
         }
-        this.items[index].inc(tick);
+        this.items[index]!.inc(tick);
     }
 
     /** Table used to convert a sort option to the field to sort upon. */
@@ -155,6 +161,9 @@ export class TimeSlot {
     scan(): void {
         for (let n= this.firstIndex; n <= this.lastIndex; n++) {
             const tick = this.ticks[n];
+            if (!tick) {
+                continue;
+            }
             if (n == this.firstIndex) {
                 this.totals = new SlotItem(tick);
             } else if (this.totals != null) {
@@ -171,7 +180,7 @@ export class TimeSlot {
         if (this.options.order) {
             let field= 'count';
             if (TimeSlot.sortFieldLookup[this.options.order]) {
-                field = TimeSlot.sortFieldLookup[this.options.order];
+                field = TimeSlot.sortFieldLookup[this.options.order] ?? 'title';
             }
             if (field == 'title') {
                 this.items = sortOn(this.items, field);
@@ -187,7 +196,7 @@ export class TimeSlot {
      */
     totalScan(): void {
         for (let n= this.firstIndex; n <= this.lastIndex; n++) {
-            const tick = this.ticks[n];
+            const tick = this.ticks[n]!;
             if (n == this.firstIndex) {
                 this.totals = new SlotItem(tick);
             } else if (this.totals != null) {
@@ -212,7 +221,7 @@ export class TimeSlot {
         if ((n < 0) || (n >= this.items.length)) {
             throw new RangeError('Index is out-of-bounds.');
         }
-        return this.items[n];
+        return this.items[n]!;
     }
 
     /**

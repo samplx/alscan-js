@@ -33,7 +33,7 @@ describe('request', () => {
         var r: SummaryReport;
         beforeEach(() => {
             r = new SummaryReport();
-            r.output = mock.fn((s: string) => {});
+            r.output = mock.fn((_s: string) => {});
             r.limit = Infinity;
             r.category = 'ips';
             r.start = new Date(Date.UTC(2001, 0, 1, 0, 0, 0, 0));
@@ -45,6 +45,7 @@ describe('request', () => {
             const output = r.output as test.Mock<(s: string) => void>;
             assert.equal(output.mock.callCount(), 1);
             const call = output.mock.calls[0];
+            assert.ok(call);
             assert.equal(call.arguments[0], 'No entires match search criteria.');
         });
         test('nothing to report, terse', () => {

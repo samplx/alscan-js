@@ -29,7 +29,10 @@ import assert from "node:assert/strict";
 // const recognizer = require('../lib/recognizer.js');
 
 describe('alscan', async () => {
-
+    beforeEach(() => {});
+    test.todo('need some tests', () => {
+        assert.ok(true);
+    });
 });
 
 // describe('alscan', () => {

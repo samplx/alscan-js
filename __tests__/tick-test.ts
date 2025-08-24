@@ -53,7 +53,6 @@ describe('Tick', () => {
         assert.equal(tick.item, undefined);
     });
 
-
     test('constructor with time set, size string invalid number, item defined', () => {
         const tick = new Tick(500, 'twelve', 'ten');
         assert.notEqual(tick, undefined);

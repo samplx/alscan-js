@@ -80,13 +80,13 @@ describe('timeslot', () => {
 
         test('negative index throws', () => {
             assert.throws(() => {
-                const x = ts.getItem(-1);
+                ts.getItem(-1);
             });
         });
 
         test('too large index throws', () => {
             assert.throws(() => {
-                const x = ts.getItem(1000);
+                ts.getItem(101);
             });
         });
 

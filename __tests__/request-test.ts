@@ -32,7 +32,7 @@ describe('request', () => {
         var r: RequestReport;
         beforeEach(() => {
             r = new RequestReport();
-            r.output = mock.fn((s: string) => {});
+            r.output = mock.fn((_: string) => {});
             r.limit = Infinity;
             r.category = 'ips';
             r.start = new Date(Date.UTC(2001, 0, 1, 0, 0, 0, 0));

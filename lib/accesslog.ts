@@ -131,7 +131,7 @@ export class AccessLogEntry {
             if (combined[7] == '-') {
                 this.size = 0;
             } else {
-                this.size = parseInt(combined[7]);
+                this.size = parseInt(combined[7] ?? '');
             }
             this.referer    = combined[8] || '-';
             this.agent      = combined[9] || '-';
@@ -148,7 +148,7 @@ export class AccessLogEntry {
                 if (common[7] == '-') {
                     this.size = 0;
                 } else {
-                    this.size = parseInt(common[7]);
+                    this.size = parseInt(common[7] ?? '');
                 }
                 this.referer    = '-';
                 this.agent      = '-';
@@ -157,34 +157,34 @@ export class AccessLogEntry {
             }
         }
 
-        const req = AccessLogEntry.requestRegExp.exec(this.request);
+        const req = AccessLogEntry.requestRegExp.exec(this.request ?? '');
         if (req !== null) {
             this.method = req[1];
             this.uri = req[2];
             this.protocol = req[3];
         }
 
-        let timestamp = AccessLogEntry.timestampRegExp.exec(this.timestamp);
+        let timestamp = AccessLogEntry.timestampRegExp.exec(this.timestamp ?? '');
         let day, month;
         if (timestamp !== null) {
-            day = parseInt(timestamp[1], 10);
-            month = AccessLogEntry.monthNames.indexOf(timestamp[2]);
+            day = parseInt(timestamp[1] ?? '', 10);
+            month = AccessLogEntry.monthNames.indexOf(timestamp[2] ?? '');
             if (month < 0) {
                 throw new Error(`Invalid month name: ${timestamp[2]}`);
             }
         } else {
-            timestamp = AccessLogEntry.cPanelTimestampRegExp.exec(this.timestamp);
+            timestamp = AccessLogEntry.cPanelTimestampRegExp.exec(this.timestamp ?? '');
             if (timestamp === null) {
                 throw new Error(`Invalid timestamp: ${this.timestamp}`);
             }
-            month = parseInt(timestamp[1], 10)-1;
-            day = parseInt(timestamp[2], 10);
+            month = parseInt(timestamp[1] ?? '', 10)-1;
+            day = parseInt(timestamp[2] ?? '', 10);
         }
-        const year = parseInt(timestamp[3], 10);
-        const hours = parseInt(timestamp[4], 10);
-        const minutes = parseInt(timestamp[5], 10);
-        const seconds = parseInt(timestamp[6], 10);
-        let timezone = ((parseInt(timestamp[8], 10) * 3600) + (parseInt(timestamp[9], 10) * 60)) * 1000;
+        const year = parseInt(timestamp[3] ?? '', 10);
+        const hours = parseInt(timestamp[4] ?? '', 10);
+        const minutes = parseInt(timestamp[5] ?? '', 10);
+        const seconds = parseInt(timestamp[6] ?? '', 10);
+        let timezone = ((parseInt(timestamp[8] ?? '', 10) * 3600) + (parseInt(timestamp[9] ?? '', 10) * 60)) * 1000;
         if (timestamp[7] == '-') {
             timezone = -timezone;
         }

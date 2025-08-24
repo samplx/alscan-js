@@ -32,7 +32,7 @@ export class Recognizer {
     field: keyof AccessLogEntry;
     op?: AN_OP;
     operands?: Array<Item>;
-    func?: RecognizerFunc;
+    func?: RecognizerFunc | undefined;
 
     /**
      *  @ctor Recognizer constructor.
@@ -131,7 +131,7 @@ export class Recognizer {
         if ((addressMatch === null) || (addressMatch[5] === undefined)) {
             return host == addressMask;
         }
-        const bits = parseInt(addressMatch[6], 10);
+        const bits = parseInt(addressMatch[6] ?? '', 10);
         if (Number.isNaN(bits) || (bits <= 0) || (bits >= 32)) {
             return host == addressMask;
         }
@@ -140,14 +140,14 @@ export class Recognizer {
             mask = (mask << 1) + 1;
         }
         mask = ~mask;
-        const hostIP = (parseInt(hostMatch[1], 10) * 16777216) +
-                    (parseInt(hostMatch[2], 10) * 65536) +
-                    (parseInt(hostMatch[3], 10) * 256) +
-                        parseInt(hostMatch[4], 10);
-        const address= (parseInt(addressMatch[1], 10) * 16777216) +
-                    (parseInt(addressMatch[2], 10) * 65536) +
-                    (parseInt(addressMatch[3], 10) * 256) +
-                        parseInt(addressMatch[4], 10);
+        const hostIP = (parseInt(hostMatch[1] ?? '', 10) * 16777216) +
+                    (parseInt(hostMatch[2] ?? '', 10) * 65536) +
+                    (parseInt(hostMatch[3] ?? '', 10) * 256) +
+                        parseInt(hostMatch[4] ?? '', 10);
+        const address= (parseInt(addressMatch[1] ?? '', 10) * 16777216) +
+                    (parseInt(addressMatch[2] ?? '', 10) * 65536) +
+                    (parseInt(addressMatch[3] ?? '', 10) * 256) +
+                        parseInt(addressMatch[4] ?? '', 10);
         return ((hostIP & mask) == (address & mask));
     }
 

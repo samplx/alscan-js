@@ -64,7 +64,7 @@ export class SummaryReport extends Reporter {
         if (this.slotWidth == Infinity) {
             nSlots = 1;
         } else if (firstIndex < lastIndex) {
-            const duration = (ticks[lastIndex].time - ticks[firstIndex].time) / 1000;
+            const duration = (ticks[lastIndex]!.time - ticks[firstIndex]!.time) / 1000;
             nSlots = Math.ceil(duration / this.slotWidth);
         } else if (firstIndex === lastIndex) {
             nSlots = 1;
@@ -100,19 +100,19 @@ export class SummaryReport extends Reporter {
         if (firstIndex !== 0) {
             let stopTime: number;
             if (firstIndex < ticks.length) {
-                stopTime = ticks[firstIndex].time - 1;
+                stopTime = ticks[firstIndex]!.time - 1;
             } else {
-                stopTime = ticks[ticks.length-1].time;
+                stopTime = ticks[ticks.length-1]!.time;
             }
-            this.before = new TimeSlot(ticks, 0, firstIndex-1, ticks[0].time, stopTime, this);
+            this.before = new TimeSlot(ticks, 0, firstIndex-1, ticks[0]!.time, stopTime, this);
             this.before.totalScan();
         }
         if (lastIndex != (ticks.length-1)) {
             this.after = new TimeSlot(ticks,
                 lastIndex+1,
                 ticks.length-1,
-                ticks[lastIndex+1].time,
-                ticks[ticks.length-1].time,
+                ticks[lastIndex+1]!.time,
+                ticks[ticks.length-1]!.time,
                 this);
             this.after.totalScan();
         }
@@ -133,7 +133,7 @@ export class SummaryReport extends Reporter {
             this.totals.totalScan();
 
             const slotWidthMS = this.slotWidth * 1000;
-            var startTime = (Math.floor(ticks[firstIndex].time / slotWidthMS) * slotWidthMS);
+            var startTime = (Math.floor(ticks[firstIndex]!.time / slotWidthMS) * slotWidthMS);
             var nextTime = startTime - 1000;
             var first = firstIndex;
             var last = -1;
@@ -142,7 +142,7 @@ export class SummaryReport extends Reporter {
             while (nextTime < this.stop.getTime()) {
                 nextTime += slotWidthMS;
                 for (var n=first; n < length ; n++) {
-                    if (ticks[n].time >= nextTime) {
+                    if (ticks[n]!.time >= nextTime) {
                         break;
                     }
                     last= n;
@@ -224,8 +224,8 @@ export class SummaryReport extends Reporter {
      */
     getFirstIndex(ticks: Array<Tick>) {
         if (this.keepOutside && this.start) {
-            for (var n=0, length=ticks.length; n < length; n++) {
-                if (ticks[n].time >= this.start.getTime()) {
+            for (let n=0; n < ticks.length; n++) {
+                if (ticks[n]!.time >= this.start.getTime()) {
                     return n;
                 }
             }
@@ -241,9 +241,9 @@ export class SummaryReport extends Reporter {
      */
     getLastIndex(ticks: Array<Tick>) {
         if (this.keepOutside && this.stop) {
-            var last = -1;
-            for (var n=0, length= ticks.length; n < length; n++) {
-                if (ticks[n].time > this.stop.getTime()) {
+            let last = -1;
+            for (let n=0; n < ticks.length; n++) {
+                if (ticks[n]!.time > this.stop.getTime()) {
                     break;
                 }
                 last = n;
@@ -327,7 +327,7 @@ export class SummaryReport extends Reporter {
     verboseSlotReport(slot: TimeSlot): void {
         const title = Reporter.categoryLookup[this.category ?? 'undefined'];
         this.output(this.getTimestampHeader(slot.startTime, slot.firstTime, slot.lastTime, slot.stopTime, 'Slot'));
-        this.output(this.getColumnHeader(title));
+        this.output(this.getColumnHeader(title ?? ''));
         let length = slot.nItems();
         if (this.limit && (this.limit < length)) {
             length = this.limit;

@@ -34,9 +34,9 @@ export class DowntimeReport extends Reporter {
             return;
         }
 
-        const firstTime = ticks[0].time;
+        const firstTime = ticks[0]!.time;
         const firstTS = this.getTimestamp(firstTime);
-        const lastTime = ticks[ticks.length-1].time;
+        const lastTime = ticks[ticks.length-1]!.time;
         const lastTS  = this.getTimestamp(lastTime);
         let tsFirst = 0;
         let tsLast  = 26;
@@ -59,17 +59,17 @@ export class DowntimeReport extends Reporter {
 
         // convert slotWidth to milliseconds.
         const slotWidthMS = this.slotWidth * 1000;
-        let currentTime = Math.floor(ticks[0].time / slotWidthMS) * slotWidthMS;
+        let currentTime = Math.floor(ticks[0]!.time / slotWidthMS) * slotWidthMS;
         let nextTime = currentTime - 1000;
         let count = 0;
         let bandwidth = 0;
         let n= 0;
 
-        while ((n < ticks.length) && (ticks[n].time <= stopTimeMS)) {
+        while ((n < ticks.length) && (ticks[n]!.time <= stopTimeMS)) {
             nextTime += slotWidthMS;
-            while ((n < ticks.length) && (ticks[n].time <= nextTime)) {
+            while ((n < ticks.length) && (ticks[n]!.time <= nextTime)) {
                 count += 1;
-                bandwidth += ticks[n].size;
+                bandwidth += ticks[n]!.size;
                 n += 1;
             }
             row  = this.getTimestamp(currentTime).substring(tsFirst, tsLast);

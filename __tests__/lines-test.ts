@@ -26,7 +26,7 @@ import { LineStream } from "../lib/lines.ts";
 const dataDirectory = path.join(getDataDirectory(), 'lines');
 
 describe('lines', () => {
-    test('test end-of-file on end-of-line', (t, done) => {
+    test('test end-of-file on end-of-line', (_t, done) => {
         const testStream = new LineStream({ encoding: 'utf8' });
         const inputStream = fs.createReadStream(path.join(dataDirectory, 'lines'), { encoding: 'utf8' });
         let lineNumber  = 1;
@@ -49,7 +49,7 @@ describe('lines', () => {
         inputStream.pipe(testStream);
     });
 
-    test('test end-of-file before end-of-line', (t, done) => {
+    test('test end-of-file before end-of-line', (_t, done) => {
         const testStream = new LineStream({ encoding: 'utf8' });
         const inputStream = fs.createReadStream(path.join(dataDirectory, 'no-nl'), { encoding: 'utf8' });
         let lineNumber  = 1;

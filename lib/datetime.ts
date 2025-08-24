@@ -16,8 +16,6 @@
  *
  */
 
-import { getRootPathname } from "./scanfile.ts";
-
 // -------------------------------------------------------------------------
 
 export class PartialDate {
@@ -130,7 +128,7 @@ export class PartialDate {
         if (pattern === null) {
             return null;
         }
-        this.hours = parseInt(pattern[1], 10);
+        this.hours = parseInt(pattern[1] ?? '', 10);
         if (pattern[4] === undefined) {
             this.minutes = roundDown ? 0 : 59;
         } else {
@@ -151,7 +149,7 @@ export class PartialDate {
                 } else {
                     zone = parseInt(pattern[12], 10) * 60000;
                 }
-                zone += parseInt(pattern[11], 10) * 3600000;
+                zone += parseInt(pattern[11] ?? '', 10) * 3600000;
                 if (pattern[10] == '-') {
                     zone = -zone;
                 }
@@ -164,7 +162,7 @@ export class PartialDate {
     parseSecondSinceEpoch(timestamp: string, _roundDown: boolean): null | PartialDate {
         const pattern = PartialDate.secondsSinceEpoch.exec(timestamp);
         if (pattern !== null) {
-            this.setTime(1000 * parseInt(pattern[1], 10));
+            this.setTime(1000 * parseInt(pattern[1] ?? '', 10));
             return this;
         }
         return null;
@@ -179,7 +177,7 @@ export class PartialDate {
             if (pattern[5] !== undefined) {
                 this.month = parseInt(pattern[5], 10)-1;
             }
-            this.day = parseInt(pattern[7], 10);
+            this.day = parseInt(pattern[7] ?? '', 10);
             if (pattern[9] === undefined) {
                 this.hours = roundDown ? 0 : 23;
             } else {
@@ -205,7 +203,7 @@ export class PartialDate {
                     } else {
                         zone = parseInt(pattern[20], 10) * 60000;
                     }
-                    zone += parseInt(pattern[19], 10) * 3600000;
+                    zone += parseInt(pattern[19] ?? '', 10) * 3600000;
                     if (pattern[18] == '-') {
                         zone = -zone;
                     }
@@ -232,7 +230,7 @@ export class PartialDate {
                     }
                 }
             }
-            this.day = parseInt(pattern[5], 10);
+            this.day = parseInt(pattern[5] ?? '', 10);
             if (pattern[6] === undefined) {
                 this.hours = roundDown ? 0 : 23;
             } else {
@@ -287,7 +285,7 @@ export class PartialDate {
                     }
                 }
             }
-            this.day = parseInt(pattern[1], 10);
+            this.day = parseInt(pattern[1] ?? '', 10);
             if (pattern[6] === undefined) {
                 this.hours = roundDown ? 0 : 23;
             } else {
@@ -364,7 +362,7 @@ export function validateDateSettings(
     } else if ((month < 0) || (month > 11)) {
         errs.push(new RangeError('Invalid ' + timestamp + ' month is out of range.'));
     } else {
-        const lastDay = isLeap ? lastDayLeap[month] : lastDayNonLeap[month];
+        const lastDay = (isLeap ? lastDayLeap[month] : lastDayNonLeap[month]) ?? 31;
         if (!isNaN(day) && ((day < 1) || (day > lastDay))) {
             errs.push(new RangeError('Invalid ' + timestamp + ' day of month (expected 1 <= day <= ' + lastDay + '): ' + day));
         }

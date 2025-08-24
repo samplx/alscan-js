@@ -29,11 +29,11 @@ const CPANEL_DIRECTORY = '.cpanel';
  *  Determine an account's home directory.
  */
 function getHomeDirectory(): string {
-    if (process.env.ALSCAN_TESTING_HOME) {
-        return getRootPathname(process.env.ALSCAN_TESTING_HOME);
+    if (process.env['ALSCAN_TESTING_HOME']) {
+        return getRootPathname(process.env['ALSCAN_TESTING_HOME']);
     }
-    if (process.env.HOME) {
-        return getRootPathname(process.env.HOME);
+    if (process.env['HOME']) {
+        return getRootPathname(process.env['HOME']);
     }
     return '.';
 }
@@ -223,7 +223,7 @@ export class CPanelUserAccess extends PanelAccess {
      *  Find all log files associated with an account.
      *  @arg account name.
      */
-    override async findAccountLogFiles(account: string): Promise<Array<ScanFile>> {
+    override async findAccountLogFiles(_account: string): Promise<Array<ScanFile>> {
         return [];
     }
 
@@ -263,7 +263,7 @@ export class CPanelUserAccess extends PanelAccess {
             const list = await fs.readdir(logdir);
             for (const name of list) {
                 const check = CPanelUserAccess.archivePattern.exec(name);
-                if (check && (months.indexOf(check[3]) >= 0) && !isIgnoredFile(name)) {
+                if (check && (months.indexOf(check[3] ?? '') >= 0) && !isIgnoredFile(name)) {
                     const pathname = path.join(logdir, name);
                     files.push(new ScanFile(undefined, pathname, check[1]));
                 }

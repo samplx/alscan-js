@@ -90,9 +90,9 @@ async function getAccountHomeDirectory(account: string): Promise<string | undefi
         if (main &&
             (typeof main === 'object') &&
             ('main_domain' in main) &&
-            (main.main_domain) &&
-            (typeof main.main_domain) === 'string') {
-            const pathname = getRootPathname(path.join(CPANEL_USERDATA_DIR, account, main.main_domain));
+            (main['main_domain']) &&
+            (typeof main['main_domain']) === 'string') {
+            const pathname = getRootPathname(path.join(CPANEL_USERDATA_DIR, account, main['main_domain']));
             const domain = await fs.readFile(pathname, {encoding: 'utf8', flag: 'r'});
             contents = null;
             try {
@@ -152,22 +152,23 @@ async function getAccountLogFiles(account: string): Promise<Array<ScanFile>> {
         const contents = mains[account];
         if (contents && (typeof contents === 'object')) {
             if (('main_domain' in contents) &&
-                (contents.main_domain) &&
-                (typeof contents.main_domain === 'string')) {
-                domains.push({ 'domain': contents.main_domain, 'subdomain': contents.main_domain });
+                (contents["main_domain"]) &&
+                (typeof contents["main_domain"] === 'string')) {
+                domains.push({ 'domain': contents["main_domain"], 'subdomain': contents["main_domain"] });
             }
             if (('addon_domains' in contents) &&
-                contents.addon_domains &&
-                (typeof contents.addon_domains === 'object')) {
-                const addon_domains = contents.addon_domains as Record<string, string>;
-                for (const domain in contents.addon_domains) {
-                    domains.push({ 'domain': domain, 'subdomain': addon_domains[domain] });
+                contents["addon_domains"] &&
+                (typeof contents["addon_domains"] === 'object')) {
+                const addon_domains = contents["addon_domains"] as Record<string, string>;
+                for (const domain in contents["addon_domains"]) {
+                    const addon = addon_domains[domain] ?? domain;
+                    domains.push({ 'domain': domain, 'subdomain': addon });
                 }
             }
             if (('sub_domains' in contents) &&
-                contents.sub_domains &&
-                Array.isArray(contents.sub_domains)) {
-                contents.sub_domains.forEach((name) => {
+                contents["sub_domains"] &&
+                Array.isArray(contents["sub_domains"])) {
+                contents["sub_domains"].forEach((name) => {
                     const found = domains.some((domain) => domain.subdomain == name);
                     if (!found) {
                         domains.push({ 'domain': name, 'subdomain': name });
@@ -253,15 +254,15 @@ async function getAccountArchiveFiles(account: string, months: Array<string>): P
             if (contents &&
                 (typeof contents === 'object') &&
                 ('main_domain' in contents) &&
-                (typeof contents.main_domain == 'string')) {
-                domains.push({ 'domain': contents.main_domain, 'subdomain': contents.main_domain });
+                (typeof contents["main_domain"] == 'string')) {
+                domains.push({ 'domain': contents["main_domain"], 'subdomain': contents["main_domain"] });
             }
             if (contents &&
                 (typeof contents === 'object') &&
                 ('addon_domains' in contents) &&
-                contents.addon_domains &&
-                (typeof contents.addon_domains === 'object')) {
-                const addon_domains = contents.addon_domains as Record<string, unknown>;
+                contents["addon_domains"] &&
+                (typeof contents["addon_domains"] === 'object')) {
+                const addon_domains = contents["addon_domains"] as Record<string, unknown>;
                 for (const domain in addon_domains) {
                     if ((typeof domain === 'string') &&
                         (domain in addon_domains) &&
@@ -274,9 +275,9 @@ async function getAccountArchiveFiles(account: string, months: Array<string>): P
             if (contents &&
                 (typeof contents === 'object') &&
                 ('sub_domains' in contents) &&
-                contents.sub_domains &&
-                Array.isArray(contents.sub_domains)) {
-                contents.sub_domains.forEach((name) => {
+                contents["sub_domains"] &&
+                Array.isArray(contents["sub_domains"])) {
+                contents["sub_domains"].forEach((name) => {
                     const found = domains.some((domain) => domain.subdomain == name);
                     if (!found) {
                         domains.push({ 'domain': name, 'subdomain': name });
@@ -389,9 +390,9 @@ async function getSubdomainName(domain: string): Promise<string | undefined> {
         if (contents &&
             (typeof contents === 'object') &&
             ('addon_domains' in contents) &&
-            contents.addon_domains &&
-            (typeof contents.addon_domains === 'object')) {
-            const addon_domains = contents.addon_domains as Record<string, string>;
+            contents["addon_domains"] &&
+            (typeof contents["addon_domains"] === 'object')) {
+            const addon_domains = contents["addon_domains"] as Record<string, string>;
             if (domain in addon_domains) {
                 return addon_domains[domain];
             }

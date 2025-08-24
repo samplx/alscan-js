@@ -24,7 +24,7 @@ import { Reporter } from "../lib/reporter.ts";
 describe('reporter', () => {
     describe('constructor', () => {
         test('normal', () => {
-            const r = new Reporter();
+            new Reporter();
         });
     });
 
