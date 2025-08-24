@@ -20,7 +20,7 @@ import { ScanFile } from "./scanfile.ts";
 
 import { PanelAccess } from "./panel-access.ts";
 import { CPanelAccess } from "./panels/50-cpanel.ts";
-import { CPanelUserAccess } from "./panels/60-cpanelUser.ts";
+import { CPanelUserAccess } from "./panels/60-cpanel-user.ts";
 import type { AlscanOptions } from "./options.ts";
 
 /**

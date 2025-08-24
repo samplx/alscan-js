@@ -16,11 +16,11 @@
  *
  */
 
-import { test, describe, beforeEach, mock } from "node:test";
+import { test, describe, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import * as path from "node:path";
 
-import { getRootPathname, setRootDirectory, ScanFile } from "../lib/scanfile.ts";
+import { setRootDirectory, ScanFile } from "../lib/scanfile.ts";
 import { Panels } from "../lib/panels.ts";
 import { getDataDirectory } from "../test/testData.ts";
 import type { AlscanOptions } from "../lib/options.ts";

@@ -21,7 +21,7 @@ import assert from "node:assert/strict";
 import * as path from "node:path";
 
 import { getRootPathname, setRootDirectory, ScanFile } from "../lib/scanfile.ts";
-import { CPanelUserAccess } from "../lib/panels/60-cpanelUser.ts";
+import { CPanelUserAccess } from "../lib/panels/60-cpanel-user.ts";
 import { getDataDirectory } from "../test/testData.ts";
 
 interface ExpectedRow {
