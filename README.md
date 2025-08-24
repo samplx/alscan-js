@@ -6,7 +6,7 @@ An Access log scanner
 The **alscan** tool is used to extract data from web server access logs.
 It creates a report based upon the contents of the logs and the options specified on the command-line.
 
-More information about the tool is available at its [home page](http://alscan.org/).
+More information about the tool is available at its [home page](http://samplx.org/alscan/).
 
 The tool is released under the [Apache 2.0 License](http://http://apache.org/licenses/).
 

@@ -1,5 +1,5 @@
 
-FROM node:lts-buster
+FROM node:lts-trixie
 
 # Create the app directory
 WORKDIR /usr/src/app
