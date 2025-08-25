@@ -26,10 +26,7 @@ export class Reporter {
     id?: string = undefined;
 
     /** reporting category. */
-    category?: string = undefined;
-
-    /** debug flag. */
-    debug: boolean = false;
+    category?: string | undefined = undefined;
 
     /** number of items to include in a report. */
     limit?: number = undefined;
@@ -37,17 +34,16 @@ export class Reporter {
     output: (s: string) => void = (s) => console.log(s);
 
     /** sort order of report results. */
-    order?: string = undefined;
+    order?: string | undefined = undefined;
 
     /** size of time-slots in seconds. */
-    slotWidth?: number = undefined;
+    slotWidth?: number | undefined = undefined;
 
     /** beginning of reporting period (Date) */
-    start?: Date = undefined;
+    start?: Date | undefined = undefined;
 
     /** end of reporting period (Date) */
-    stop?: Date = undefined;
-
+    stop?: Date | undefined = undefined;
 
     /** Bytes order of magnitudes. */
     static bytesSuffix: Array<string> = [ ' B', 'kB', 'MB', 'GB', 'TB', 'PB', 'XB' ];
@@ -263,7 +259,7 @@ export class Reporter {
      *  Create report (override).
      *  @param ticks data to report.
      */
-    report(_ticks: Array<Tick>): void {
+    async report(_ticks: Array<Tick>): Promise<void> {
 
     }
 

@@ -116,8 +116,8 @@ export class AccessLogEntry {
         this.size       = undefined;
         this.referer    = undefined;
         this.agent      = undefined;
-        this.group      = undefined;
-        this.source     = undefined;
+        this.group      = 'Unknown';
+        this.source     = 'Unknown';
 
         const combined = AccessLogEntry.combinedRegExp.exec(str);
         if (combined !== null) {

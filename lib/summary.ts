@@ -47,7 +47,7 @@ export class SummaryReport extends Reporter {
         this.slots = [];
     }
 
-    override report(ticks: Array<Tick>): void {
+    override async report(ticks: Array<Tick>): Promise<void> {
         if ( (ticks.length === 0) ||
                 (this.start === undefined) ||
                 (this.stop === undefined) ||
@@ -183,7 +183,6 @@ export class SummaryReport extends Reporter {
         row += this.getBPS(item.bandwidth, elapsed) + ' ';
         row += this.getBytesString(item.peakBandwidth) + ' ';
         row += item.title;
-        row += '\n';
         return row;
     };
 

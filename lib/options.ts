@@ -18,13 +18,18 @@
 
 export interface AlscanOptions {
     accounts?: Array<string>;
-    archive?: boolean;
-    directory?: Array<string>;
+    alllogs?: boolean | undefined;
+    archive?: boolean | undefined;
+    category?: string | undefined;
+    directories?: Array<string> | undefined;
     domains?: Array<string>;
-    domlogs?: boolean;
-    file?: Array<string>;
-    main?: boolean;
-    panel?: boolean;
-    start?: Date;
-    stop?: Date;
+    domlogs?: boolean | undefined;
+    error?: boolean | undefined;
+    files?: Array<string>;
+    keepOutside?: boolean | undefined;
+    main?: boolean | undefined;
+    panel?: boolean | undefined;
+    start?: Date | undefined;
+    stop?: Date | undefined;
+    timeSlot?: number | undefined;
 }

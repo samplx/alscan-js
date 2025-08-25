@@ -29,7 +29,7 @@ export class RequestReport extends Reporter {
      *  Create Request report.
      *  @param ticks data to create report.
      */
-    override report(ticks: Array<Tick>): void {
+    override async report(ticks: Array<Tick>): Promise<void> {
         for (const tick of ticks) {
             if (tick.item) {
                 this.output(tick.item);

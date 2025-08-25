@@ -112,14 +112,14 @@ export class Panels {
                 }
             }
         }
-        if (Array.isArray(options.file)) {
-            for (const file of options.file) {
+        if (Array.isArray(options.files)) {
+            for (const file of options.files) {
                 const scans = await this.panel.findLogFile(file);
                 list.push(...scans);
             }
         }
-        if (Array.isArray(options.directory)) {
-            for (const dir of options.directory) {
+        if (Array.isArray(options.directories)) {
+            for (const dir of options.directories) {
                 const files = await this.panel.findLogFilesInDirectory(dir);
                 list.push(...files);
             }

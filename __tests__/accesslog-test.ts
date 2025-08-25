@@ -69,6 +69,8 @@ describe('AccessLogEntry', () => {
                 const rec = a as unknown as Record<string, unknown>;
                 if (key in expectedResult) {
                     assert.equal(rec[key], expectedResult[key]);
+                } else if ((key === 'group') || (key === 'source')) {
+                    assert.equal(rec[key], 'Unknown');
                 } else {
                     assert.equal(rec[key], undefined);
                 }

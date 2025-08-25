@@ -17,42 +17,28 @@
  *
  */
 
-// // enable JavaScript strict mode.
-// 'use strict';
-
-// // module imports
-// const _ = require('lodash');
-// const fs = require('fs');
-// const util = require('util');
-// const when = require('when');
-// const zlib = require('zlib');
-
-// const accesslog = require('./accesslog.js');
-// const argvParser = require('samplx-argv-parser');
-// const datetime = require('./datetime.js');
-// const lines = require('./lines.js');
-// const panels = require('./panels.js');
-// const recognizer = require('./recognizer.js');
-// const tick = require('./tick.js');
-
 import * as fs from "node:fs";
-import * as path from "node:path";
 import * as process from "node:process";
-import { AccessLogEntry } from "./accesslog.ts";
-import { Command, InvalidArgumentError, Option } from "@commander-js/extra-typings";
-import { PartialDate } from "./datetime.ts";
-import { LineStream } from "./lines.ts";
-import { Panels } from "./panels.ts";
-import { matches } from "./recognizer.ts";
-import { Tick } from "./tick.ts";
-import packageJson from "../package.json" with { type: 'json'};
 import { fileURLToPath } from "node:url";
 import { createGunzip } from "node:zlib";
 import type { Stream } from "node:stream";
+import sortOn from "sort-on";
+import { Command, InvalidArgumentError, Option } from "@commander-js/extra-typings";
 
-const HOME_PAGE = packageJson.homepage;
-const ISSUES_URL = packageJson.bugs.url;
-const VERSION = packageJson.version;
+import { AccessLogEntry } from "./accesslog.ts";
+import { addIP, addPattern, addValue, addValueNC, matches } from "./recognizer.ts";
+import type { AlscanOptions } from "./options.ts";
+import { calculateStartStop, lastReboot, PartialDate } from "./datetime.ts";
+import { DenyReport } from "./deny.ts";
+import { DowntimeReport } from "./downtime.ts";
+import { LineStream } from "./lines.ts";
+import { Panels } from "./panels.ts";
+import packageJson from "../package.json" with { type: 'json'};
+import type { Reporter } from "./reporter.ts";
+import { RequestReport } from "./request.ts";
+import type { ScanFile } from "./scanfile.ts";
+import { SummaryReport } from "./summary.ts";
+import { Tick } from "./tick.ts";
 
 /**
  * Return a validator function used to validate partial date parameters.
@@ -64,524 +50,161 @@ function validateTime(value: string, _dummyPrevious: string): string {
     throw new InvalidArgumentError(`${value} is not a valid date-time.`);
 }
 
-// /**
-//  * Create an empty command-line parser with a set of properties.
-//  * @param {module} argvParser
-//  */
-// function createArgs(argvParser) {
-//     const args = argvParser.create({
-//         description : 'An access log scanner.',
-//         epilog : '\nFor more information, please visit:\n' +
-//                  '    ' + HOME_PAGE + '\n' +
-//                  'To report problems, use:\n' +
-//                  '    ' + ISSUES_URL + '\n'
-//     });
-//     return args;
-// }
+/**
+ * Return a getItem function depending upon the options and category.
+ * @param {object} options parsed options from command-line.
+ * @param {string} category category of the requested report.
+ */
+export function getGetItem(
+    options: Record<string, unknown>,
+    category: string | undefined
+): (record: AccessLogEntry, domain: string) => string | undefined {
+    if (!!options['deny']) {
+        return (record: AccessLogEntry, _domain: string) => record.host;
+    }
+    if (!!options['downtime']) {
+        return (_record: AccessLogEntry) => undefined;
+    }
+    if (!!options['request']) {
+        return (record: AccessLogEntry) => record.line;
+    }
+    if (category === 'groups') {
+        return (record: AccessLogEntry, _domain: string) => record.group;
+    }
+    if (category === 'sources') {
+        return (record: AccessLogEntry, _domain: string) => record.source;
+    }
+    if (category === 'agents') {
+        return (record: AccessLogEntry, _domain: string) => record.agent;
+    }
+    if (category === 'urls') {
+        return (record: AccessLogEntry, _domain: string) => record.uri;
+    }
+    if ((category === 'codes') || (category === undefined)) {
+        return (record: AccessLogEntry, _domain: string) => record.status;
+    }
+    if (category === 'referers') {
+        return (record: AccessLogEntry, _domain: string) => record.referer;
+    }
+    if (category === 'domains') {
+        return (_record: AccessLogEntry, domain: string) => domain;
+    }
+    if (category === 'methods') {
+        return (record: AccessLogEntry, _domain: string) => record.method;
+    }
+    if (category === 'requests') {
+        return (record: AccessLogEntry, _domain: string) => record.request;
+    }
+    if (category === 'protocols') {
+        return (record: AccessLogEntry, _domain: string) => record.protocol;
+    }
+    if (category === 'users') {
+        return (record: AccessLogEntry, _domain: string) => record.user;
+    }
+    if (category === 'ips') {
+        return (record: AccessLogEntry, _domain: string) => record.host;
+    }
+    throw new Error(`Unrecognized category: ${category}`);
+}
 
-// /**
-//  * Setup the argvParser to handle the defined options.
-//  * @param {object} args command-line parser.
-//  * @param {object} validators default validators for command-line options.
-//  * @param {boolean} hasAccounts flag indicates the panel supports account specific files.
-//  * @param {boolean} hasArchives flag indicates the panel supports archive files.
-//  * @param {boolean} hasDomains flag indicates the panel supports domain specific files.
-//  * @param {boolean} hasMainLog flag indicates the panel has a main log file.
-//  * @param {boolean} hasPanelLog flag indicates the panel has a separate log file for the panel itself.
-//  */
-// function setupArgvParser(args, validators, hasAccounts, hasArchives, hasDomains, hasMainLog, hasPanelLog) {
-//     args.createOption(['--version', '-V'], {
-//         groupName : 'General Options',
-//         description: 'Print the release version and exit.',
-//     });
+/**
+ * Setup a specific reporter based upon options, category, etc.
+ * @param {object} options
+ */
+function reporterFactory(
+    alscanOptions: AlscanOptions,
+    options: Record<string, unknown>,
+): Reporter {
+    let reporter: Reporter;
+    if (!!options['deny']) {
+        reporter = new DenyReport();
+    } else if (!!options['downtime']) {
+        reporter = new DowntimeReport();
+    } else if (!!options['request']) {
+        reporter = new RequestReport();
+    } else {
+        const summaryReport = new SummaryReport();
+        reporter = summaryReport;
+        if (typeof options['fs'] === 'string') {
+            summaryReport.fieldSep = options['fs']
+        }
+        summaryReport.keepOutside = !!alscanOptions.keepOutside;
+        summaryReport.terse = !!options['terse'];
+    }
+    reporter.category = alscanOptions.category;
+    if (typeof options['top'] === 'number') {
+        reporter.limit = options['top'];
+    }
+    if (typeof options['sort'] === 'string') {
+        reporter.order = options['sort'];
+    }
+    reporter.slotWidth = alscanOptions.timeSlot;
+    reporter.start = alscanOptions.start;
+    reporter.stop = alscanOptions.stop;
+    return reporter;
+}
 
-//     args.createOption(['--help', '-h'], {
-//         description: 'Print this message.',
-//     });
-
-//     args.createOption(['--debug'], {
-//         description: false,
-//     });
-
-//     args.createOption(['--verbose', '-v'], {
-//         description: 'Increase the information provided.',
-//         allowMultiple: true
-//     });
-
-//     args.createOption(['--quiet', '-q'], {
-//         description: 'Do not provide progress information.',
-//     });
-
-//     const validCategories = [ 'groups', 'sources', 'user-agents', 'agents',
-//         'uris', 'urls', 'codes', 'referers', 'referrers', 'requests',
-//         'domains', 'methods', 'protocols', 'users', 'ips' ];
-
-//     const domainCategory = hasDomains ? 'domains, ' : '';
-//     if (hasDomains) {
-//         validCategories.push('domains');
-//     }
-//     args.createOption(['--category'], {
-//         groupName : 'Report Category Options',
-//         hasValue : true,
-//         requiresValue : true,
-//         valueName : 'NAME',
-//         defaultValue : 'groups',
-//         description : 'Define the report category.\n' +
-//                       'Category can be one of:\n' +
-//                       ' groups, sources, user-agents, agents,\n' +
-//                       ' uris, urls, codes, referers, referrers\n' +
-//                       ' ' + domainCategory + 'methods, requests, protocols,\n' +
-//                       ' users or ips',
-//         validators: [ validators.inEnum(validCategories) ],
-//     });
-
-//     args.addShorthand('--groups', ['--category', 'groups']);
-//     args.addShorthand('--sources', ['--category', 'sources']);
-//     args.addShorthand('--user-agents', ['--category', 'user-agents']);
-//     args.addShorthand('--agents', ['--category', 'user-agents']);
-//     args.addShorthand('--uris', ['--category', 'uris']);
-//     args.addShorthand('--urls', ['--category', 'uris']);
-//     args.addShorthand('--codes', ['--category', 'codes']);
-//     args.addShorthand('--referers', ['--category', 'referers']);
-//     args.addShorthand('--referrers', ['--category', 'referers']);
-//     if (hasDomains) {
-//         args.addShorthand('--domains', ['--category', 'domains']);
-//     }
-//     args.addShorthand('--methods', ['--category', 'methods']);
-//     args.addShorthand('--requests', ['--category', 'requests']);
-//     args.addShorthand('--protocols', ['--category', 'protocols']);
-//     args.addShorthand('--users', ['--category', 'users']);
-//     args.addShorthand('--ips', ['--category', 'ips']);
-
-//     args.createOption(['--start'], {
-//         groupName : 'Time Options',
-//         hasValue : true,
-//         valueName: 'DATE-TIME',
-//         description : 'Start of the detailed scan period.',
-//         validators : [ validateTime() ],
-//     });
-
-//     args.addShorthand('--begin', ['--start']);
-//     args.addShorthand('--reboot', ['--start', 'reboot']);
-
-//     args.createOption(['--stop'], {
-//         hasValue : true,
-//         valueName : 'DATE-TIME',
-//         description : 'End of the detailed scan period.',
-//         validators : [ validateTime() ],
-//     });
-
-//     args.addShorthand('--end', ['--stop']);
-
-//     args.createOption(['--time-slot'], {
-//         hasValue : true,
-//         valueName : 'SECONDS',
-//         defaultValue : '3600',
-//         description :  'Duration of a time-slot (seconds).',
-//         validators : [ validators.positiveInteger() ],
-//         transform : function (value) {
-//             if (value == 'Infinity') {
-//                 return Infinity;
-//             }
-//             return parseInt(value, 10);
-//         },
-//     });
-
-//     args.addShorthand('--minutes', ['--time-slot', '60']);
-//     args.addShorthand('--hours', ['--time-slot', '3600']);
-//     args.addShorthand('--days', ['--time-slot', '86400']);
-//     args.addShorthand('-1', ['--time-slot', 'Infinity']);
-//     args.addShorthand('--one', ['--time-slot', 'Infinity']);
-
-//     args.createOption(['--file'], {
-//         groupName : 'Access log options.',
-//         hasValue : true,
-//         valueName : 'PATHNAME',
-//         description : 'Scan log file.',
-//         validators : [ validators.file() ],
-//         allowMultiple : true
-//     });
-
-//     args.createOption(['--directory', '--dir'], {
-//         hasValue : true,
-//         valueName : 'DIRECTORY',
-//         description : 'Scan access logs in directory.',
-//         validators : [ validators.directory() ],
-//         allowMultiple : true
-//     });
-
-//     const hasAllLogs = hasAccounts || hasDomains || hasMainLog || hasPanelLog;
-
-//     if (hasAccounts) {
-//         args.createOption(['--account'], {
-//             hasValue : true,
-//             valueName : 'ACCOUNT',
-//             description : 'Scan logs for named account.',
-//             allowMultiple : true
-//         });
-//     }
-
-//     if (hasArchives) {
-//         args.createOption(['--archive'], {
-//             description : 'Include archived logs.'
-//         });
-//     }
-
-//     if (hasDomains) {
-//         args.createOption(['--domain'], {
-//             hasValue : true,
-//             valueName : 'domain.tld',
-//             description : 'Scan log of named domain.',
-//             allowMultiple : true
-//         });
-
-//         args.createOption(['--domlogs', '--vhosts'], {
-//             description : 'Scan all vhost access logs.'
-//         });
-//     }
-
-//     if (hasMainLog) {
-//         args.createOption(['--main'], {
-//             description : 'Scan default (no vhost) access log.'
-//         });
-//     }
-
-//     if (hasPanelLog) {
-//         args.createOption(['--panel'], {
-//             description : 'Scan panel access log.'
-//         });
-//     }
-
-//     if (hasAllLogs) {
-//         args.createOption(['--alllogs'], {
-//             description : 'Scan all known access logs (vhosts, main, panel.)'
-//         });
-//     }
-
-//     args.createOption(['--deny'], {
-//         groupName : 'Report Format Options',
-//         description : 'Enable deny report.'
-//     });
-
-//     args.createOption(['--downtime'], {
-//         description : 'Enable downtime report.'
-//     });
-
-//     args.createOption(['--request'], {
-//         description : 'Enable request (grep-like) report.'
-//     });
-
-//     args.createOption(['--terse', '-t'], {
-//         description : 'Enable terse summary report.'
-//     });
-
-//     args.createOption(['--fs', '-F'], {
-//         hasValue : true,
-//         valueName : 'SEP',
-//         description : 'Define terse report field separator.',
-//         defaultValue : '|'
-//     });
-
-//     const sortOptions = [ 'title', 'item', 'count', 'bandwidth', 'peak', 'peak-bandwidth' ];
-//     args.createOption(['--sort'], {
-//         hasValue : true,
-//         valueName : 'ORDER',
-//         description : 'Sort results by order. Order is one of:\n' +
-//                       ' title, item, count, bandwidth, peak, or \n' +
-//                       ' peak-bandwidth',
-//         validators : [ validators.inEnum(sortOptions) ],
-//         defaultValue : 'count'
-//     });
-
-//     args.createOption(['--top'], {
-//         hasValue : true,
-//         valueName : 'NUMBER',
-//         description :  'Maximum number of items to report.',
-//         defaultValue : 'Infinity',
-//         validators : [ validators.positiveInteger() ],
-//         transform : function (value) {
-//             if (value == 'Infinity') {
-//                 return Infinity;
-//             }
-//             return parseInt(value, 10);
-//         },
-//     });
-
-//     args.createOption(['--outside'], {
-//         description : 'Include summary of requests outside of start and stop times.'
-//     });
-
-//     args.createOption(['--agent'], {
-//         groupName : 'Search Options',
-//         hasValue : true,
-//         allowMultiple : true,
-//         valueName : 'STRING',
-//         description : 'Match exact user-agent string.'
-//     });
-
-//     args.addShorthand('--ua', ['--agent']);
-//     args.addShorthand('--user-agent', ['--agent']);
-
-//     args.createOption(['--match-agent'], {
-//         hasValue : true,
-//         allowMultiple : true,
-//         valueName : 'REGEXP',
-//         description : 'Match user-agent regular expression.'
-//     });
-
-//     args.addShorthand('--match-ua', [ '--match-agent' ]);
-//     args.addShorthand('--match-user-agent', [ '--match-agent' ]);
-
-//     args.createOption(['--code'], {
-//         hasValue : true,
-//         allowMultiple : true,
-//         valueName : 'STATUS',
-//         description : 'Match HTTP status code.'
-//     });
-
-//     args.createOption(['--group'], {
-//         hasValue : true,
-//         allowMultiple : true,
-//         valueName : 'NAME',
-//         description : 'Match User-agent group name.'
-//     });
-
-//     args.createOption(['--ip'], {
-//         hasValue : true,
-//         allowMultiple : true,
-//         valueName : 'IP[/mask]',
-//         description : 'Match request IP address.'
-//     });
-
-//     args.createOption(['--method'], {
-//         hasValue : true,
-//         allowMultiple : true,
-//         valueName : 'METHOD',
-//         description : 'Match request method name.'
-//     });
-
-//     args.createOption(['--referer'], {
-//         hasValue : true,
-//         allowMultiple : true,
-//         valueName : 'URI',
-//         description : 'Match exact referer string.'
-//     });
-
-//     args.addShorthand('--referrer', ['--referer']);
-
-//     args.createOption(['--match-referer'], {
-//         hasValue : true,
-//         allowMultiple : true,
-//         valueName : 'REGEXP',
-//         description : 'Match referer regular expression.'
-//     });
-
-//     args.addShorthand('--match-referrer', ['--match-referer']);
-
-//     args.createOption(['--source'], {
-//         hasValue : true,
-//         allowMultiple : true,
-//         valueName : 'NAME',
-//         description : 'Match User-agent source name.'
-//     });
-
-//     args.createOption(['--uri'], {
-//         hasValue : true,
-//         allowMultiple : true,
-//         valueName : 'STRING',
-//         description : 'Match exact URL string.'
-//     });
-//     args.addShorthand('--url', ['--uri']);
-
-//     args.createOption(['--match-uri'], {
-//         hasValue : true,
-//         allowMultiple : true,
-//         valueName : 'REGEXP',
-//         description : 'Match URL regular expression.'
-//     });
-//     args.addShorthand('--match-url', ['--match-uri']);
-
-//     args.createOperand('filename', {
-//         description : 'Optional list of files to scan.',
-//         greedy : true
-//     });
-
-//     return args;
-// }
-
-// /**
-//  * Setup the command-line argument parser.
-//  * @param hasAccounts flag indicates the panel has account specific files.
-//  * @param hasArchives flag indicates the panel has archived files.
-//  * @param hasDomains flag indicates the panel has domain specific files.
-//  * @param hasMainLog flag indicates the panel has a main log file.
-//  * @param hasPanelLog flag indicates the panel has a panel specific log file.
-//  */
-// function initializeArgs(
-//     hasAccounts: boolean,
-//     hasArchives: boolean,
-//     hasDomains: boolean,
-//     hasMainLog: boolean,
-//     hasPanelLog: boolean
-// ): Command {
-//     const program = new Command();
-
-//     return program;
-// }
-
-// /**
-//  * Return a getItem function depending upon the options and category.
-//  * @param {object} options parsed options from command-line.
-//  * @param {string} category category of the requested report.
-//  */
-// function getGetItem(options, category) {
-//     var getItem;
-//     if (options['--deny'].isSet) {
-//         getItem = (record) => record.host;
-//     } else if (options['--downtime'].isSet) {
-//         getItem = () => undefined;
-//     } else if (options['--request'].isSet) {
-//         getItem = (record) => record.line;
-//     } else if (category == 'groups') {
-//         getItem = (record) => record.group;
-//     } else if (category == 'sources') {
-//         getItem = (record) => record.source;
-//     } else if ((category == 'user-agents') || (category == 'agents')) {
-//         getItem = (record) => record.agent;
-//     } else if ((category == 'uris') || (category == 'urls')) {
-//         getItem = (record) => record.uri;
-//     } else if (category == 'codes') {
-//         getItem = (record) => record.status;
-//     } else if ((category == 'referers') || (category == 'referrers')) {
-//         getItem = (record) => record.referer;
-//     } else if (category == 'domains') {
-//         getItem = (record, domain) => domain;
-//     } else if (category == 'methods') {
-//         getItem = (record) => record.method;
-//     } else if (category == 'requests') {
-//         getItem = (record) => record.request;
-//     } else if (category == 'protocols') {
-//         getItem = (record) => record.protocol;
-//     } else if (category == 'users') {
-//         getItem = (record) => record.user;
-//     } else if (category == 'ips') {
-//         getItem = (record) => record.host;
-//     } else {
-//         throw new Error('Unrecognized category: ' + category);
-//     }
-//     return getItem;
-// }
-
-// /**
-//  * Determine how verbose we should be while processing data.
-//  * @param {object} options parsed command-line options.
-//  */
-// function getVerboseLevel(options) {
-//     if (options['--quiet'].isSet) {
-//         return 0;
-//     }
-//     if (options['--verbose'].isSet) {
-//         return 1 + options['--verbose'].timesSet;
-//     }
-//     return 1;
-// }
-
-// /**
-//  * Setup a specific reporter based upon options, category, etc.
-//  * @param {object} options
-//  * @param {boolean} debug
-//  * @param {number} verboseLevel
-//  * @param {string} category
-//  */
-// function getReporter(options, debug, verboseLevel, category) {
-//     var reporter;
-//     if (options['--deny'].isSet) {
-//         const DenyReport = require('./deny.js').DenyReport;
-//         reporter = new DenyReport();
-//         reporter.limit = options['--top'].value;
-//         reporter.order = options['--sort'].value;
-//     } else if (options['--downtime'].isSet) {
-//         const DowntimeReport = require('./downtime.js').DowntimeReport;
-//         reporter = new DowntimeReport();
-//         if (options['--time-slot'].isSet) {
-//             reporter.slotWidth = options['--time-slot'].value;
-//         } else {
-//             // default for downtime report is one minute.
-//             reporter.slotWidth = 60;
-//         }
-//     } else if (options['--request'].isSet) {
-//         const RequestReport = require('./request.js').RequestReport;
-//         reporter = new RequestReport();
-//     } else {
-//         const SummaryReport = require('./summary.js').SummaryReport;
-//         reporter = new SummaryReport();
-//         reporter.slotWidth = options['--time-slot'].value;
-//         reporter.order = options['--sort'].value;
-//         reporter.limit = options['--top'].value;
-//         if (options['--terse'].isSet || options['--fs'].isSet) {
-//             reporter.terse = true;
-//             reporter.fieldSep = options['--fs'].value;
-//         }
-//         reporter.keepOutside = options['--outside'].isSet;
-//     }
-//     reporter.debug = debug;
-//     reporter.verboseLevel = verboseLevel;
-//     reporter.category = category;
-//     return reporter;
-// }
-
-// /**
-//  * Return an AgentDB object if it is needed based upon options and category.
-//  * @param {object} options parsed command-line options.
-//  * @param {string} category given category of the requested report.
-//  */
-// function getAgentDB(options, category) {
-//     if (options['--group'].isSet || options['--source'].isSet || (category == 'groups') || (category == 'sources')) {
-//         const agentDB = require('samplx-agentdb');
-//         return agentDB;
-//     }
-//     return undefined;
-// }
-
-// /**
-//  * Add matchers to the recognizer based upon command-line options.
-//  * @param {object} options parsed command-line options.
-//  */
-// function setupRecognizer(options) {
-//     if (options['--agent'].isSet) {
-//         options['--agent'].value.forEach((value) => recognizer.addValue('agent', value));
-//     }
-//     if (options['--match-agent'].isSet) {
-//         options['--match-agent'].value.forEach((re) => recognizer.addPattern('agent', re));
-//     }
-//     if (options['--code'].isSet) {
-//         options['--code'].value.forEach((value) =>recognizer.addValue('status', value));
-//     }
-//     if (options['--ip'].isSet) {
-//         options['--ip'].value.forEach((v) => recognizer.addIP(v));
-//     }
-//     if (options['--method'].isSet) {
-//         options['--method'].value.forEach((value) => recognizer.addValueNC('method', value));
-//     }
-//     if (options['--referer'].isSet) {
-//         options['--referer'].value.forEach((value) => recognizer.addValue('referer', value));
-//     }
-//     if (options['--match-referer'].isSet) {
-//         options['--match-referer'].value.forEach((re) => recognizer.addPattern('referer', re));
-//     }
-//     if (options['--uri'].isSet) {
-//         options['--uri'].value.forEach((value) => recognizer.addValue('uri', value));
-//     }
-//     if (options['--match-uri'].isSet) {
-//         options['--match-uri'].value.forEach((re) => recognizer.addPattern('uri', re));
-//     }
-//     if (options['--group'].isSet) {
-//         options['--group'].value.forEach((value) => recognizer.addValueNC('group', value));
-//     }
-//     if (options['--source'].isSet) {
-//         options['--source'].value.forEach((value) => recognizer.addValueNC('source', value));
-//     }
-// }
+/**
+ * Add matchers to the recognizer based upon command-line options.
+ * @param {object} options parsed command-line options.
+ */
+function setupRecognizer(options: Record<string, unknown>): void {
+    if (Array.isArray(options['userAgent'])) {
+        for (const value of options['userAgent']) {
+            addValue('agent', value);
+        }
+    }
+    if (Array.isArray(options['matchUserAgent'])) {
+        for (const value of options['matchUserAgent']) {
+            addPattern('agent', value);
+        }
+    }
+    if (Array.isArray(options['code'])) {
+        for (const value of options['code']) {
+            addValue('status', value);
+        }
+    }
+    if (Array.isArray(options['ip'])) {
+        for (const value of options['ip']) {
+            addIP(value);
+        }
+    }
+    if (Array.isArray(options['method'])) {
+        for (const value of options['method']) {
+            addValueNC('method', value);
+        }
+    }
+    if (Array.isArray(options['referer'])) {
+        for (const value of options['referer']) {
+            addValue('referer', value);
+        }
+    }
+    if (Array.isArray(options['matchReferer'])) {
+        for (const value of options['matchReferer']) {
+            addPattern('referer', value);
+        }
+    }
+    if (Array.isArray(options['url'])) {
+        for (const value of options['url']) {
+            addValue('uri', value);
+        }
+    }
+    if (Array.isArray(options['matchUrl'])) {
+        for (const value of options['matchUrl']) {
+            addPattern('uri', value);
+        }
+    }
+    if (Array.isArray(options['group'])) {
+        for (const value of options['group']) {
+            addValueNC('group', value);
+        }
+    }
+    if (Array.isArray(options['source'])) {
+        for (const value of options['source']) {
+            addValueNC('source', value);
+        }
+    }
+}
 
 /**
  * Scan a single file/stream. Resolves to an array of Ticks. Rejects to an error.
@@ -593,265 +216,161 @@ function validateTime(value: string, _dummyPrevious: string): string {
  * @param {boolean} keepOutside flag indicates to record events that are outside of start and stop.
  * @param {function} getItem function used to extract information from each record.
  */
-// async function scanStream(
-//     baseStream: Stream,
-//     isCompressed: boolean,
-//     domain: string,
-//     start: number,
-//     stop: number,
-//     keepOutside: boolean,
-//     getItem: Function) {
-//     const entry = new AccessLogEntry();
-//     const ticks: Array<Tick> = [];
-//     const inputStream = new LineStream({});
+function scanStream(
+    baseStream: Stream,
+    isCompressed: boolean,
+    domain: string,
+    start: number,
+    stop: number,
+    keepOutside: boolean,
+    getItem: (r: AccessLogEntry, d: string) => string | undefined,
+): Promise<Array<Tick>> {
+    const entry = new AccessLogEntry();
+    const ticks: Array<Tick> = [];
+    const inputStream = new LineStream({});
 
-//     inputStream.on('data', function (chunk) {
-//         entry.parse(chunk);
-//         if (matches(entry) && entry.time) {
-//             if ((entry.time <= stop) && (entry.time >= start)) {
-//                 ticks.push(new Tick(entry.time, entry.size, getItem(entry, domain)));
-//             } else if (keepOutside) {
-//                 ticks.push(new Tick(entry.time, entry.size, undefined));
-//             }
-//         }
-//     });
+    return new Promise((resolve, reject) => {
+        inputStream.on('data', function (chunk) {
+            entry.parse(chunk);
+            if (matches(entry) && entry.time) {
+                if ((entry.time <= stop) && (entry.time >= start)) {
+                    ticks.push(new Tick(entry.time, entry.size, getItem(entry, domain)));
+                } else if (keepOutside) {
+                    ticks.push(new Tick(entry.time, entry.size, undefined));
+                }
+            }
+        });
 
-//     inputStream.on('end', function () {
-//         deferred.resolve(ticks);
-//     });
+        inputStream.on('end', function () {
+            resolve(ticks);
+        });
 
-//     inputStream.on('error', function (err) {
-//         deferred.reject(err);
-//     });
+        inputStream.on('error', function (err) {
+            reject(err);
+        });
 
-//     if (isCompressed) {
-//         baseStream.pipe(createGunzip()).pipe(inputStream);
-//     } else {
-//         baseStream.pipe(inputStream);
-//     }
-// }
+        if (isCompressed) {
+            baseStream.pipe(createGunzip()).pipe(inputStream);
+        } else {
+            baseStream.pipe(inputStream);
+        }
 
-// /**
-//  * Process the contents of a single log file.
-//  * @param {promise} deferred resolved when file has been processed.
-//  * @param {ScanFile} file information about the log file.
-//  * @param {Date} start when a log entry becomes 'interesting'.
-//  * @param {Date} stop when a log entry is no longer 'interesting'.
-//  * @param {boolean} keepOutside process log entries before start and after stop.
-//  * @param {function} getItem function to call to extract information from a record.
-//  * @param {object} agentDB used to lookup a user-agent's group and source.
-//  */
-// function scanFile(deferred, file, start, stop, keepOutside, getItem, agentDB) {
-//     const baseStream = fs.createReadStream(file.pathname);
-//     scanStream(deferred, baseStream, file.isCompressed(), file.domain, start, stop, keepOutside, getItem, agentDB);
-// }
+    });
+}
 
-// /**
-//  * Process the contents of a group of log files.
-//  * @param {Array} files array of ScanFile entires.
-//  * @param {Date} start when a log entry becomes 'interesting'.
-//  * @param {Date} stop when a log entry is no longer 'interesting'.
-//  * @param {boolean} keepOutside process log entries before start and after stop.
-//  * @param {function} getItem function to call to extract information from a log record.
-//  * @param {object} agentDB used to lookup a user-agents group and source.
-//  */
-// function scanFiles(files, start, stop, keepOutside, getItem, agentDB) {
-//     if (files.length === 0) {
-//         const d = when.defer();
-//         d.reject(new Error('No files to scan.'));
-//         return d.promise;
-//     }
-//     const promises = [];
-//     files.forEach((file) => {
-//         const d = when.defer();
-//         scanFile(d, file, start, stop, keepOutside, getItem, agentDB);
-//         promises.push(d.promise);
-//     });
-//     return when.all(promises);
-// }
+/**
+ * Process the contents of a single log file.
+ * @param {ScanFile} file information about the log file.
+ * @param {Date} start when a log entry becomes 'interesting'.
+ * @param {Date} stop when a log entry is no longer 'interesting'.
+ * @param {boolean} keepOutside process log entries before start and after stop.
+ * @param {function} getItem function to call to extract information from a record.
+ */
+async function scanFile(
+    file: ScanFile,
+    start: Date,
+    stop: Date,
+    keepOutside: boolean,
+    getItem: (r: AccessLogEntry, d: string) => string | undefined,
+): Promise<Array<Tick>> {
+    const baseStream = fs.createReadStream(file.pathname);
+    return await scanStream(baseStream,
+            file.isCompressed(), file.domain ?? '',
+                start.getTime(), stop.getTime(),
+                    keepOutside, getItem);
+}
 
-// /**
-//  * Process the source array of arrays of Tick entries,
-//  * return a flattened and sorted array of Tick entries.
-//  * @param {Array} ticksArrays source array of arrays of Tick entries.
-//  */
-// function flattenAndSort(ticksArrays) {
-//     var ticks = _.flatten(ticksArrays);
-//     var sorted = _.sortBy(ticks, 'time');
-//     return when(sorted);
-// }
+/**
+ * Process the contents of a group of log files.
+ * @param {Array} files array of ScanFile entires.
+ * @param {Date} start when a log entry becomes 'interesting'.
+ * @param {Date} stop when a log entry is no longer 'interesting'.
+ * @param {boolean} keepOutside process log entries before start and after stop.
+ * @param {function} getItem function to call to extract information from a log record.
+ * @param {object} agentDB used to lookup a user-agents group and source.
+ */
+export async function scanFiles(
+    files: Array<ScanFile>,
+    start: Date,
+    stop: Date,
+    keepOutside: boolean,
+    getItem: (r: AccessLogEntry, d: string) => string | undefined,
+    verbose: boolean
+): Promise<Array<Tick>> {
+    const ticks: Array<Tick> = [];
+    let width =10;
+    for (const file of files) {
+        if (width < file.filename.length) {
+            width = file.filename.length;
+        }
+    }
+    width += 2;
+    console.log(`  filename${' '.repeat(width-8)}    count`);
+    console.log(`${'-'.repeat(width)}   --------`);
+    for (const file of files) {
+        const each = await scanFile(file, start, stop, keepOutside, getItem);
+        if (verbose) {
+            let line: string;
+            const spaces = ' '.repeat(width - file.filename.length);
+            line = `> ${file.filename}${spaces} ${each.length.toString().padStart(8)}`;
+            console.log(line);
+        }
+        ticks.push(...each);
+    }
+    if (verbose) {
+        console.log('\n'.repeat(5));
+    }
+    return sortOn(ticks, 'time');
+}
 
-// /**
-//  * Determine the starting and stop time from the command-line arguments.
-//  * @param {object} options parsed command-line options.
-//  * @param {*} slotWidth how wide in seconds each 'bucket' is.
-//  */
-// function getStartStop(options, slotWidth) {
-//     const haveStart = options['--start'].isSet ? datetime.parsePartialDate(options['--start'].value, true) : when(new PartialDate());
-//     const haveStop = when.defer();
-//     const haveStartStop = when.defer();
-//     haveStart.then(start => {
-//         if (options['--stop'].isSet) {
-//             datetime.parsePartialDate(options['--stop'].value, false).then((stop) => {
-//                 haveStop.resolve(stop);
-//             });
-//         } else {
-//             haveStop.resolve(new PartialDate());
-//         }
-//         haveStop.promise.then((stop) => {
-//             haveStartStop.resolve(datetime.calculateStartStop(start, stop, slotWidth));
-//         });
-//     });
-//     return haveStartStop;
-// }
+/**
+ * Determine which category to use.
+ * @param options command-line options.
+ * @returns category associated with the options.
+ */
+function determineCategory(options: Record<string, unknown>): string {
+    if (typeof options['category'] === 'string') {
+        return options['category'];
+    }
+    if (!!options['agents']) {
+        return 'agents';
+    }
+    if (!!options['codes']) {
+        return 'codes';
+    }
+    if (!!options['domains']) {
+        return 'domains';
+    }
+    if (!!options['groups']) {
+        return 'groups';
+    }
+    if (!!options['ips']) {
+        return 'ips';
+    }
+    if (!!options['methods']) {
+        return 'methods';
+    }
+    if (!!options['protocols']) {
+        return 'protocols';
+    }
+    if (!!options['requests']) {
+        return 'requests';
+    }
+    if (!!options['sources']) {
+        return 'sources';
+    }
+    if (!!options['urls']) {
+        return 'urls';
+    }
+    if (!!options['users']) {
+        return 'users';
+    }
+    return 'codes';
+}
 
-// /**
-//  * Determine how the files will be gathered and processed.
-//  * @param {object} options parsed command-line options.
-//  * @param {object} startStop boundaries of 'interesting' log events.
-//  */
-// function getFileOptions(options, startStop) {
-//     const fileOptions = {
-//         accounts    : [],
-//         domains     : [],
-//         domlogs     : false,
-//         files       : options['--file'].value || [],
-//         directories : options['--directory'].value || [],
-//         main        : panels.hasMainLog() && options['--main'].isSet,
-//         panel       : panels.hasPanelLog() && options['--panel'].isSet,
-//         start       : startStop.start,
-//         stop        : startStop.stop
-//     };
-//     if (panels.hasAccounts()) {
-//         fileOptions.accounts = options['--account'].value || [];
-//     }
-//     fileOptions.archives = panels.hasArchives() && options['--archive'].isSet;
-//     if (panels.hasDomains()) {
-//         fileOptions.domains = options['--domain'].value || [];
-//         fileOptions.domlogs = options['--domlogs'].isSet;
-//     }
-//     if (options['--alllogs'] && options['--alllogs'].isSet) {
-//         fileOptions.domlogs = fileOptions.main = fileOptions.panel = true;
-//     }
-//     if (options.filename.value) {
-//         fileOptions.files = fileOptions.files.concat(options.filename.value);
-//     }
-//     return fileOptions;
-// }
-
-// /**
-//  * Process files according to the given command-line arguments.
-//  * @param {object} args command-line parser.
-//  * @param {Array} errors array of errors.
-//  * @param {object} options parsed command-line.
-//  */
-// async function processFiles(args, errors, options): Promise<void> {
-//     const d = when.defer();
-//     if (errors) {
-//         args.printUsage(errors);
-//         d.resolve(2);
-//     } else if (options['--help'].isSet) {
-//         args.printHelp();
-//         d.resolve(0);
-//     } else {
-//         const verboseLevel = getVerboseLevel(options);
-//         if (options['--version'].isSet) {
-//             args.printVersion(VERSION, (verboseLevel > 1));
-//             d.resolve(0);
-//         } else {
-//             const debug = options['--debug'].isSet;
-//             const category = options['--category'].value;
-//             const reporter = getReporter(options, debug, verboseLevel, category);
-//             const getItem = getGetItem(options, category);
-//             const agentDB = getAgentDB(options, category);
-//             setupRecognizer(options);
-//             const report = (ticks) => {
-//                 reporter.report(ticks);
-//                 d.resolve(0);
-//             };
-//             const reportError = (error) => {
-//                 reporter.reportError(error);
-//                 d.resolve(1);
-//             };
-//             const haveStartStop = getStartStop(options, reporter.slotWidth);
-//             haveStartStop.promise.then((startStop) => {
-//                 if (startStop.errors) {
-//                     startStop.errors.forEach((error) => reportError(error));
-//                     d.resolve(2);
-//                 } else {
-//                     reporter.start = startStop.start;
-//                     reporter.stop = startStop.stop;
-//                     const fileOptions = getFileOptions(options, startStop);
-//                     const fileScanner = (files) => scanFiles(files, startStop.start, startStop.stop, reporter.keepOutside, getItem, agentDB);
-//                     const files = panels.findScanFiles(fileOptions);
-//                     files
-//                         .then(fileScanner)
-//                         .then(flattenAndSort)
-//                         .then(report, reportError);
-//                 }
-//             });
-//         }
-//     }
-//     return d.promise;
-// }
-
-// // -------------------------------------------------------------------------
-// /**
-//  * Singleton object for Application.
-//  * main is the only useful entry point.
-//  * Other functions are exposed to simplify unit tests.
-//  */
-// const alscan = {
-//     validateTime : validateTime,
-
-//     initializeArgs : initializeArgs,
-
-//     scanStream: scanStream,
-
-//     scanFile : scanFile,
-
-//     scanFiles : scanFiles,
-
-//     flattenAndSort : flattenAndSort,
-
-//     getVerboseLevel : getVerboseLevel,
-
-//     getReporter : getReporter,
-
-//     getGetItem: getGetItem,
-
-//     getAgentDB: getAgentDB,
-
-//     setupRecognizer : setupRecognizer,
-
-//     getStartStop: getStartStop,
-
-//     getFileOptions: getFileOptions,
-
-//     processFiles: processFiles,
-
-//     /**
-//      * Command-line entry point.
-//      * @param {Array} command-line arguments.
-//      */
-//     main: function (argv) {
-
-//         panels.load();
-
-//         const args = initializeArgs(argvParser, panels.hasAccounts(), panels.hasArchives(), panels.hasDomains(), panels.hasMainLog(), panels.hasPanelLog());
-
-//         const callback = (errors, options) => {
-//             processFiles(args, errors, options).then((code) => {
-//                 process.exitCode = code;
-//             });
-//         };
-
-//         args.parse(argv.slice(2), callback);
-//     },
-
-// };
-
-
+/**
+ * All of the command-line options.
+ */
 interface CliOptions {
     // General Options
     quiet: Option;
@@ -919,6 +438,9 @@ interface CliOptions {
     feedbackUrl: Option;
 }
 
+/**
+ * list of all of the categories used to prevent conflicting options.
+ */
 const fullCategoryList: Array<string> = [
         'agents',
         'category',
@@ -934,6 +456,11 @@ const fullCategoryList: Array<string> = [
         'users'
 ];
 
+/**
+ * Determine which category values are available.
+ * @param hasDomains flag that indicates if per domain data is available.
+ * @returns list of potential categories, for the usage message.
+ */
 function categoryList(hasDomains: boolean): Array<string> {
     if (hasDomains) {
         return fullCategoryList.filter((n) => n != 'category');
@@ -941,10 +468,18 @@ function categoryList(hasDomains: boolean): Array<string> {
     return fullCategoryList.filter((n) => (n != 'category') && (n != 'domains'));
 }
 
+/**
+ * Determine which other categories would conflict with this setting.
+ * @param me option category being configured.
+ * @returns list of all of the other categories. used for conflicts()
+ */
 function otherCategories(me: string): Array<string> {
     return fullCategoryList.filter((n) => n != me);
 }
 
+/**
+ * List of all of the time slot options.
+ */
 const fullTimeSlotList: Array<string> = [
     'days',
     'hours',
@@ -953,10 +488,18 @@ const fullTimeSlotList: Array<string> = [
     'timeSlot',
 ];
 
+/**
+ * Determine which other time slot options would conflict with this setting.
+ * @param me option which is being configured.
+ * @returns list of other option names. for conflicts().
+ */
 function otherTimeSlots(me: string): Array<string> {
     return fullTimeSlotList.filter((n) => n != me);
 }
 
+/**
+ * list of all of the reports.
+ */
 const fullReportList: Array<string> = [
     'deny',
     'downtime',
@@ -964,13 +507,54 @@ const fullReportList: Array<string> = [
     'terse',
 ];
 
+/**
+ * Determine which other report options would conflict with this setting.
+ * @param me option which is being configured.
+ * @returns list of other report names. for conflicts().
+ */
 function otherReports(me: string): Array<string> {
     return fullReportList.filter((n) => n != me);
 }
 
+
+/**
+ * Command-line parser that collects zero or more string values.
+ * @param value command-line option value.
+ * @param previous prior value.
+ * @returns new value containing previous and the new item.
+ */
 function collectValues(value: string, previous: Array<string>): Array<string> {
     return previous.concat([value]);
 }
+
+/**
+ * Command-line parser for a time-slot (value is a positive integer number of seconds)
+ * @param value command-line option value.
+ * @param _previous prior value (ignored)
+ * @returns parsed value.
+ */
+function parseTimeSlot(value: string, _previous: number): number {
+    const n = parseInt(value);
+    if (isNaN(n) || (n < 1)) {
+        throw new InvalidArgumentError(`value must be a positive integer (Seconds)`);
+    }
+    return n;
+}
+
+/**
+ * Command-line parser for a top value (positive integer)
+ * @param value command-line option value.
+ * @param _previous prior value (ignored)
+ * @returns parse value.
+ */
+function parseTop(value: string, _previous: number): number {
+    const n = parseInt(value);
+    if (isNaN(n) || (n < 1)) {
+        throw new InvalidArgumentError(`value must be a positive integer`);
+    }
+    return n;
+}
+
 
 /**
  * all options get defined here. they are added to specific commands when necessary.
@@ -1006,11 +590,11 @@ export function cliOptions(hasDomains: boolean): CliOptions {
         reboot: new Option('--reboot', 'same as --start=reboot').conflicts('start'),
         start: new Option('--start <date-time>', 'define when to start the report').argParser(validateTime).conflicts('reboot'),
         stop: new Option('--stop <date-time>', 'define when to end the report').argParser(validateTime),
-        timeSlot: new Option('--time-slot <seconds>', 'arbitrary number of seconds time slots').conflicts(otherTimeSlots('timeSlot')),
+        timeSlot: new Option('--time-slot <seconds>', 'arbitrary number of seconds time slots').conflicts(otherTimeSlots('timeSlot')).argParser(parseTimeSlot).default(3600),
 
         // Report Format Options
         deny: new Option('--deny', 'report is a list of deny directives').conflicts(otherReports('deny')),
-        downtime: new Option('--downtime', '').conflicts(otherReports('downtime')),
+        downtime: new Option('--downtime', 'enable downtime report').conflicts(otherReports('downtime')),
         fieldSep: new Option('-F, --fs <sep>', 'define the field separator for a terse report').implies({terse: true}).default('|'),
         request: new Option('--request', 'grep-like match of requests').conflicts(otherReports('request')),
         sort: new Option('--sort <by>', 'how to sort records').choices([
@@ -1021,27 +605,27 @@ export function cliOptions(hasDomains: boolean): CliOptions {
             'title',
         ]).default('count'),
         terse: new Option('-t, --terse', 'computer friendly single-line per record format').conflicts(otherReports('terse')),
-        top: new Option('--top <number>', 'Maximum number of items to report'),
+        top: new Option('--top <number>', 'Maximum number of items to report').argParser(parseTop).default(Infinity),
 
         // Search Options
-        agent: new Option('--agent, --user-agent <name>', ' Match exact user-agent string'),
-        code: new Option('--code <value>', 'Match HTTP status code'),
-        group: new Option('--group <name>', '(deprecated) Match User-agent group name'),
-        ip: new Option('--ip <addr>', 'Match request IP address'),
-        matchAgent: new Option('--match-agent, --match-user-agent <regexp>', 'Match user-agent regular expression'),
-        matchReferer: new Option('--match-referer, --match-referrer <regexp>', 'Match referer regular expression'),
-        matchUrl: new Option('--match-url, --match-uri <regexp>', 'Match URL regular expression'),
-        method: new Option('--method <name>', 'Match request method name'),
-        referer: new Option('--referer <referer>', 'Match exact referer string'),
-        source: new Option('--source <name>', '(deprecated) Match User-agent source name'),
-        url: new Option('--url, --uri <url>', 'Match exact URL string'),
+        agent: new Option('--agent, --user-agent <name>', 'Match exact user-agent string').argParser(collectValues).default([], 'none'),
+        code: new Option('--code <value>', 'Match HTTP status code').argParser(collectValues).default([], 'none'),
+        group: new Option('--group <name>', '(deprecated) Match User-agent group name').argParser(collectValues).default([], 'none'),
+        ip: new Option('--ip <addr>', 'Match request IP address').argParser(collectValues).default([], 'none'),
+        matchAgent: new Option('--match-agent, --match-user-agent <regexp>', 'Match user-agent regular expression').argParser(collectValues).default([], 'none'),
+        matchReferer: new Option('--match-referrer, --match-referer <regexp>', 'Match referer regular expression').argParser(collectValues).default([], 'none'),
+        matchUrl: new Option('--match-uri, --match-url <regexp>', 'Match URL regular expression').argParser(collectValues).default([], 'none'),
+        method: new Option('--method <name>', 'Match request method name').argParser(collectValues).default([], 'none'),
+        referer: new Option('--referer <referer>', 'Match exact referer string').argParser(collectValues).default([], 'none'),
+        source: new Option('--source <name>', '(deprecated) Match User-agent source name').argParser(collectValues).default([], 'none'),
+        url: new Option('--uri, --url <url>', 'Match exact URL string').argParser(collectValues).default([], 'none'),
 
         // Log Selection Options
         account: new Option('--account <name>', 'Scan logs for named account').argParser(collectValues).default([]),
         alllogs: new Option('--alllogs', 'Scan all known access logs (vhosts, main, panel)'),
         archive: new Option('--archive', 'Include archived logs'),
-        directory: new Option('--directory, --dir <name>', 'Scan access logs in directory').argParser(collectValues).default([]),
-        domain: new Option('--domain <name>', 'Scan log of named domain'),
+        directory: new Option('--dir, --directory <name>', 'Scan access logs in directory').argParser(collectValues).default([]),
+        domain: new Option('--domain <name>', 'Scan log of named domain').argParser(collectValues).default([]),
         domlogs: new Option('--domlogs, --vhosts', 'Scan all vhost access logs'),
         file: new Option('--file <name>', 'Scan log file').argParser(collectValues).default([]),
         main: new Option('--main', 'Scan default (no vhost) access log'),
@@ -1053,23 +637,16 @@ export function cliOptions(hasDomains: boolean): CliOptions {
     };
 }
 
+/**
+ * Interface to the control panels (if any.)
+ */
+const panels = new Panels();
 
-
-async function run(names: Array<string>, options: any, command: Command<[Array<string>], {}, {}>): Promise<void> {
-    console.log('in run');
-    console.log({names});
-}
-
-export async function main(): Promise<number> {
-    const panels = new Panels();
-    await panels.load();
-
-    // console.log(`has accounts:  ${panels.hasAccounts()}`);
-    // console.log(`has archives:  ${panels.hasArchives()}`);
-    // console.log(`has domains:   ${panels.hasDomains()}`);
-    // console.log(`has main log:  ${panels.hasMainLog()}`);
-    // console.log(`has panel log: ${panels.hasPanelLog()}`);
-
+/**
+ * Create a command-line parser.
+ * @returns Commander command-line parser.
+ */
+export function createParser(): Command<[Array<string>], {}, {}> {
     const options = cliOptions(panels.hasDomains());
     if (!panels.hasAccounts()) {
         options.account.hidden = true;
@@ -1137,21 +714,21 @@ export async function main(): Promise<number> {
         .addOption(options.terse)
         .addOption(options.fieldSep)
         .addOption(options.sort)
+        .addOption(options.top)
         .addOption(options.outside)
         .optionsGroup('Search Options')
         .addOption(options.agent)
         .addOption(options.matchAgent)
         .addOption(options.code)
-        .addOption(options.group)
         .addOption(options.ip)
         .addOption(options.method)
         .addOption(options.referer)
         .addOption(options.matchReferer)
-        .addOption(options.source)
         .addOption(options.url)
         .addOption(options.matchUrl)
+        .addOption(options.group)
+        .addOption(options.source)
         .argument('[name...]', 'optional list of files to scan')
-        .action(run)
         .addHelpText('afterAll', `
 
 For more information, please visit:
@@ -1161,12 +738,144 @@ To report problems, use:
     ${packageJson.bugs.url}
 `);
 
+    return cli;
+}
+
+/**
+ *
+ * @param names command-line arguments. file names to be processed.
+ * @param options command-line options.
+ * @returns refined option information.
+ */
+export async function gatherAlscanOptions(
+    names: Array<string>,
+    options: Record<string, unknown>,
+): Promise<AlscanOptions> {
+    const panelOptions: AlscanOptions = {
+        alllogs: panels.hasMainLog() && !!options['alllogs'],
+        archive: panels.hasArchives() && !!options['archive'],
+        domlogs: panels.hasMainLog() && !!options['domlogs'],
+        files: names,
+        keepOutside: !!options['outside'],
+        main: panels.hasMainLog() && !!options['main'],
+        panel: panels.hasPanelLog() && !!options['panel'],
+    };
+    if (panels.hasAccounts() &&
+        ('account' in options) &&
+        (Array.isArray(options['account']))) {
+        panelOptions.accounts = options['account'];
+    }
+    if (panels.hasDomains() &&
+        ('directory' in options) &&
+        (Array.isArray(options['directory']))) {
+        panelOptions.directories = options['directory'];
+    }
+    if (panels.hasDomains() &&
+        ('domain' in options) &&
+        (Array.isArray(options['domain']))) {
+        panelOptions.domains = options['domain'];
+    }
+    if (('file' in options) &&
+        (Array.isArray(options['file']))) {
+        if (!panelOptions.files) {
+            panelOptions.files = [];
+        }
+        panelOptions.files.push(...options['file']);
+    }
+    let partialStart = new PartialDate();
+    if (!!options['reboot']) {
+        partialStart = await lastReboot();
+    } else if (typeof options['start'] === 'string') {
+        const setting = options['start'];
+        if (setting === 'reboot') {
+            partialStart = await lastReboot();
+        } else {
+            partialStart.parse(options['start'], true);
+        }
+    }
+    let partialStop = new PartialDate();
+    if (typeof options['stop'] === 'string') {
+        partialStop.parse(options['stop'], false);
+    }
+    if (!!options['one']) {
+        panelOptions.timeSlot = Infinity;
+    } else if (!!options['days']) {
+        panelOptions.timeSlot = 24 * 60 * 60;
+    } else if (!!options['hours']) {
+        panelOptions.timeSlot = 60 * 60;
+    } else if (!!options['minutes']) {
+        panelOptions.timeSlot = 60;
+    } else if (typeof options['timeSlot'] === 'number') {
+        panelOptions.timeSlot = options['timeSlot'];
+    } else if (!!options['downtime']) {
+        // downtime report defaults to one minute time slot
+        panelOptions.timeSlot = 60;
+    }
+    const sse = calculateStartStop(partialStart, partialStop, panelOptions.timeSlot ?? 3600);
+    if (sse.errors.length > 0) {
+        for (const err of sse.errors) {
+            console.error(err.message);
+        }
+        panelOptions.error = true;
+    }
+    panelOptions.start = sse.start;
+    panelOptions.stop = sse.stop;
+    panelOptions.category = determineCategory(options);
+    return panelOptions;
+}
+
+/**
+ * Execute the pipeline.
+ * @param names command-line arguments.
+ * @param options command-line options.
+ * @param _command actual command.
+ * @returns promise resolves to a void.
+ */
+async function run(
+    names: Array<string>,
+    options: Record<string, unknown>,
+    _command: Command<[Array<string>], {}, {}>
+): Promise<void> {
+    const alscanOptions = await gatherAlscanOptions(names, options);
+    if (!!alscanOptions.error || !alscanOptions.start || !alscanOptions.stop) {
+        console.error(`Sorry, unable to continue.`);
+        return;
+    }
+    setupRecognizer(options);
+    const files = await panels.findScanFiles(alscanOptions);
+    //console.log({names, options, alscanOptions, files});
+
+    if (files.length === 0) {
+        console.error(`No files to scan.`);
+        return;
+    }
+    if (!options['quiet']) {
+        console.log(`Total number of files to scan: ${files.length}`);
+    }
+    const getItem = getGetItem(options, alscanOptions.category)
+    const reporter = reporterFactory(alscanOptions, options);
+    const verbose = !!options['verbose'];
+    const ticks = await scanFiles(files,
+        alscanOptions.start, alscanOptions.stop, !!alscanOptions.keepOutside,
+        getItem, verbose);
+    await reporter.report(ticks);
+}
+
+/**
+ * Main program entry-point.
+ * @returns 0
+ */
+export async function main(): Promise<number> {
+    await panels.load();
+
+    const cli = createParser().action(run);
+
     await cli.parseAsync();
 
     return 0;
 }
 
-
+// code to execute the main() program is the file is invoked.
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
     try {
         const exitCode = await main();

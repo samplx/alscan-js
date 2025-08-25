@@ -24,7 +24,7 @@ export class DowntimeReport extends Reporter {
      *  Create Downtime report.
      *  @param ticks data for the report.
      */
-    override report(ticks: Array<Tick>): void {
+    override async report(ticks: Array<Tick>): Promise<void> {
         if ( (ticks.length === 0) ||
              (this.start === undefined) ||
              (this.stop === undefined) ||

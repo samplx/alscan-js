@@ -70,7 +70,7 @@ describe('panels', () => {
 
         test('findScanFiles({files:["/logs/samplx.org"]})', async () => {
             const options: AlscanOptions = {
-                file: [ '/logs/samplx.org' ]
+                files: [ '/logs/samplx.org' ]
             };
             const list = await p.findScanFiles(options);
             assert.ok(Array.isArray(list));
@@ -79,7 +79,7 @@ describe('panels', () => {
 
         test('findScanFiles({directories:["/logs"]})', async () => {
             const options: AlscanOptions = {
-                directory: [ '/logs' ]
+                directories: [ '/logs' ]
             };
             const list = await p.findScanFiles(options);
             assert.ok(Array.isArray(list));
