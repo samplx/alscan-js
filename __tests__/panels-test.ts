@@ -341,7 +341,7 @@ describe('panels', () => {
 
         test('findScanFiles({file: ["/logs/samplx.org"]})', async () => {
             const options = {
-                file : [ '/logs/samplx.org' ]
+                files : [ '/logs/samplx.org' ]
             };
             const expected: Array<ExpectedRow> = [
             ];
@@ -350,7 +350,7 @@ describe('panels', () => {
 
         test('findScanFiles({directory: ["/logs"]})', async () => {
             const options = {
-                directory : [ '/logs' ]
+                directories : [ '/logs' ]
             };
             const expected: Array<ExpectedRow> = [
             ];
