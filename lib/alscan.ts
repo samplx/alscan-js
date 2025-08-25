@@ -580,7 +580,7 @@ export function cliOptions(hasDomains: boolean): CliOptions {
         referers: new Option('--referers', 'Referer').conflicts(otherCategories('referer')),
         requests: new Option('--requests', 'Request line').conflicts(otherCategories('requests')),
         sources: new Option('--sources', '(deprecated) User-agent sources').conflicts(otherCategories('sources')),
-        urls: new Option('--urls, --uris', 'URI').conflicts(otherCategories('urls')),
+        urls: new Option('--uris, --urls', 'URI').conflicts(otherCategories('urls')),
         users: new Option('--users', 'Authenticated users').conflicts(otherCategories('users')),
 
         // Time Options
