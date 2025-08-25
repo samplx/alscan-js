@@ -305,8 +305,10 @@ export async function scanFiles(
         }
     }
     width += 2;
-    console.log(`  filename${' '.repeat(width-8)}    count`);
-    console.log(`${'-'.repeat(width)}   --------`);
+    if (verbose) {
+        console.log(`  filename${' '.repeat(width-8)}    count`);
+        console.log(`${'-'.repeat(width)}   --------`);
+    }
     for (const file of files) {
         const each = await scanFile(file, start, stop, keepOutside, getItem);
         if (verbose) {
