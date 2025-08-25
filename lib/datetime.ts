@@ -16,6 +16,9 @@
  *
  */
 
+import * as fs from "node:fs/promises";
+import { getRootPathname } from "./scanfile.ts";
+
 // -------------------------------------------------------------------------
 
 export class PartialDate {
@@ -403,6 +406,16 @@ export async function lastReboot(): Promise<PartialDate> {
     const result = new PartialDate();
 
     try {
+        const pathname = getRootPathname('/proc/uptime');
+        const contents = await fs.readFile(pathname, { encoding: 'utf8'});
+        const split = contents.split(' ');
+        if ((split.length === 2) && (typeof split[0] === 'string')) {
+            const uptimeSeconds = parseFloat(split[0]);
+            if (!isNaN(uptimeSeconds) && (uptimeSeconds > 0.0)) {
+                const rebootTime = Date.now() - (uptimeSeconds * 1000.0);
+                result.setTime(rebootTime);
+            }
+        }
     } catch (e) {
         // ignore
     }
