@@ -1,8 +1,9 @@
 {
     "name": "alscan-js",
-    "version": "0.4.3",
+    "version": "0.5.0",
     "description": "An access log scanner.",
-    "homepage": "http://alscan.org/",
+    "homepage": "https://samplx.org/alscan/",
+    "type": "module",
     "author": {
         "name": "Jim Burlingame"
     },
@@ -30,7 +31,7 @@
     },
     "preferGlobal": true,
     "scripts": {
-        "test": "jest"
+        "test": "node --test"
     },
     "directories": {
         "lib": "./lib",
@@ -38,33 +39,25 @@
         "test": "./__tests__"
     },
     "dependencies": {
-        "js-yaml": "~ 3.14.1",
-        "lodash": "~ 4.17.20",
-        "samplx-agentdb": "0.3.x",
-        "samplx-argv-parser": "~ 2.3.6",
-        "when": "~ 3.7.8"
-    },
-    "optionalDependencies": {
-        "samplx-utmp": "~0.2.1"
+        "@commander-js/extra-typings": "^14.0.0",
+        "@tsconfig/node22": "^22.0.2",
+        "@tsconfig/strictest": "^2.0.5",
+        "@types/js-yaml": "^4.0.9",
+        "@types/node": "^22.15.30",
+        "commander": "^14.0.0",
+        "js-yaml": "4.1.0",
+        "sort-on": "^6.1.0",
+        "typescript": "^5.9.2"
     },
     "engines": {
-        "node": ">= 6.0"
+        "node": ">= 22.18"
     },
     "devDependencies": {
-        "jest": "~ 26.6.3",
-        "jest-cli": "~ 26.6.3",
-        "eslint": "~ 7.16.0"
+        "@tsconfig/node-ts": "^23.6.1"
     },
     "readmeFilename": "README.md",
     "bugs": {
         "url": "https://github.com/samplx/alscan-js/issues",
         "email": "bugs@samplx.org"
-    },
-    "jest": {
-        "coverageReporters": [
-            "json",
-            "html",
-            "text"
-        ]
     }
 }
