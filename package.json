@@ -50,7 +50,7 @@
         "typescript": "^5.9.2"
     },
     "engines": {
-        "node": ">= 22.0"
+        "node": ">= 22.18"
     },
     "devDependencies": {
         "@tsconfig/node-ts": "^23.6.1"
