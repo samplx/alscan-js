@@ -80,7 +80,7 @@ async function loadAccountMain(account: string): Promise<void> {
 /**
  *  Determine an account's home directory.
  *  @arg account name.
- *  @rtype promise for a pathname of the account's home directory.
+ *  @returns promise for a pathname of the account's home directory.
  */
 async function getAccountHomeDirectory(account: string): Promise<string | undefined> {
     await loadAccountMain(account);
@@ -117,7 +117,7 @@ async function getAccountHomeDirectory(account: string): Promise<string | undefi
 
 /**
  *  Determine all account names.
- *  @rtype Array of String.
+ *  @returns Array of String.
  */
 async function getAllAccounts(): Promise<Array<string>> {
     const dir = getRootPathname(CPANEL_USERDATA_DIR);
@@ -141,7 +141,7 @@ interface DomainAndSubdomain {
 /**
  *  Find all log files associated with an account.
  *  @arg account name.
- *  @rtype promise for an Array of ScanFile.
+ *  @returns promise for an Array of ScanFile.
  */
 async function getAccountLogFiles(account: string): Promise<Array<ScanFile>> {
     const files: Array<ScanFile> = [];
@@ -204,7 +204,7 @@ async function getAccountLogFiles(account: string): Promise<Array<ScanFile>> {
  *  Get a list of month-year strings used to access archived log files.
  *  @arg start : starting Date.
  *  @arg stop : ending Date.
- *  @rtype Array of String.
+ *  @returns Array of String.
  */
 function getArchiveMonths(start: Date, stop: Date): Array<string> {
     var months = [];
@@ -238,7 +238,7 @@ function getArchiveMonths(start: Date, stop: Date): Array<string> {
  *  Find all archived log files for an account.
  *  @arg account name.
  *  @arg months Array of String values of Month-Years to check.
- *  @rtype promise for an Array of ScanFile.
+ *  @returns promise for an Array of ScanFile.
  */
 async function getAccountArchiveFiles(account: string, months: Array<string>): Promise<Array<ScanFile>> {
     const files: Array<ScanFile> = [];
@@ -315,7 +315,7 @@ async function getAccountArchiveFiles(account: string, months: Array<string>): P
  *  Determine Domain log files.
  *  @arg domain name used for filename.
  *  @arg canonical domain name used for grouping.
- *  @rtype promise for an Array of ScanFile.
+ *  @returns promise for an Array of ScanFile.
  */
 async function getDomainLogFiles(domain: string, canonical: string): Promise<Array<ScanFile>> {
     const files: Array<ScanFile> = [];
@@ -359,7 +359,7 @@ async function getUserDomains(): Promise<string> {
 /**
  *  Determine the owner of a domain.
  *  @arg domain name.
- *  @rtype promise to a String account name (undefined if not found.)
+ *  @returns promise to a String account name (undefined if not found.)
  */
 async function getDomainOwner(domain: string): Promise<string | undefined> {
     const contents = await getUserDomains();
@@ -375,7 +375,7 @@ async function getDomainOwner(domain: string): Promise<string | undefined> {
 /**
  *  Determine the subdomain version of an addon domain name.
  *  @arg domain name.
- *  @rtype promise to a String subdomain version of an addon domain name.
+ *  @returns promise to a String subdomain version of an addon domain name.
  */
 async function getSubdomainName(domain: string): Promise<string | undefined> {
     const owner = await getDomainOwner(domain);
@@ -435,7 +435,7 @@ export class CPanelAccess extends PanelAccess {
 
     /**
      *  Find all available log files for accounts and domains.
-     *  @rtype promise for an Array of ScanFile.
+     *  @returns promise for an Array of ScanFile.
      */
     override async findAllLogFiles(): Promise<Array<ScanFile>> {
         const files: Array<ScanFile> = [];
@@ -450,7 +450,7 @@ export class CPanelAccess extends PanelAccess {
     /**
      *  Find all log files associated with an account.
      *  @arg account name.
-     *  @rtype promise for an Array of ScanFile.
+     *  @returns promise for an Array of ScanFile.
      */
     override async findAccountLogFiles(account: string): Promise<Array<ScanFile>> {
         return await getAccountLogFiles(account);
@@ -459,7 +459,7 @@ export class CPanelAccess extends PanelAccess {
     /**
      *  Find log files associated with a single domain.
      *  @arg domain name.
-     *  @rtype promise for an Array of ScanFile.
+     *  @returns promise for an Array of ScanFile.
      */
     override async findDomainLogFiles(domain: string): Promise<Array<ScanFile>> {
         const files: Array<ScanFile> = [];
@@ -475,7 +475,7 @@ export class CPanelAccess extends PanelAccess {
 
     /**
      *  Find the main (no vhost) log files.
-     *  @rtype promise for an Array of ScanFile.
+     *  @returns promise for an Array of ScanFile.
      */
     override async findMainLogFiles(): Promise<Array<ScanFile>> {
         const pathname = getRootPathname(CPANEL_MAIN_LOG);
@@ -493,7 +493,7 @@ export class CPanelAccess extends PanelAccess {
 
     /**
      *  Find the log files associated with the panel itself.
-     *  @rtype promise for an Array of ScanFile.
+     *  @returns promise for an Array of ScanFile.
      */
     override async findPanelLogFiles(): Promise<Array<ScanFile>> {
         const pathname = getRootPathname(CPANEL_PANEL_LOG);
@@ -513,7 +513,7 @@ export class CPanelAccess extends PanelAccess {
      *  Find all archived log files between the start and stop Date's.
      *  @arg start first Date of archives.
      *  @arg stop last Date of archives.
-     *  @rtype promise for an Array of ScanFile.
+     *  @returns promise for an Array of ScanFile.
      */
     override async findAllArchiveFiles(start: Date, stop: Date): Promise<Array<ScanFile>> {
         const months = getArchiveMonths(start, stop);
@@ -533,7 +533,7 @@ export class CPanelAccess extends PanelAccess {
      *  @arg account name.
      *  @arg start first Date of archives.
      *  @arg stop last Date of archives.
-     *  @rtype promise for an Array of ScanFile.
+     *  @returns promise for an Array of ScanFile.
      */
     override async findAccountArchiveFiles(account: string, start: Date, stop: Date): Promise<Array<ScanFile>> {
         const months = getArchiveMonths(start, stop);
@@ -546,7 +546,7 @@ export class CPanelAccess extends PanelAccess {
      *  @arg domain name.
      *  @arg start first Date of archives.
      *  @arg stop last Date of archives.
-     *  @rtype promise for an Array of ScanFile.
+     *  @returns promise for an Array of ScanFile.
      */
     override async findDomainArchiveFiles(domain: string, start: Date, stop: Date): Promise<Array<ScanFile>> {
         const account = await getDomainOwner(domain);
@@ -601,7 +601,7 @@ export class CPanelAccess extends PanelAccess {
      *  Find all archived main log files.
      *  @arg start first Date of archives.
      *  @arg stop last Date of archives.
-     *  @rtype promise for an (empty) Array of ScanFile.
+     *  @returns promise for an (empty) Array of ScanFile.
      */
     override async findMainArchiveFiles(_start: Date, _stop: Date): Promise<Array<ScanFile>> {
         return [];
@@ -611,7 +611,7 @@ export class CPanelAccess extends PanelAccess {
      *  Find all archived panel log files.
      *  @arg start first Date of archives.
      *  @arg stop last Date of archives.
-     *  @rtype promise for an (empty) Array of ScanFile.
+     *  @returns promise for an (empty) Array of ScanFile.
      */
     override async findPanelArchiveFiles(_start: Date, _stop: Date): Promise<Array<ScanFile>> {
         return [];

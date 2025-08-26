@@ -26,7 +26,7 @@ import sortOn from "sort-on";
 import { Command, InvalidArgumentError, Option } from "@commander-js/extra-typings";
 
 import { AccessLogEntry } from "./accesslog.ts";
-import { addIP, addPattern, addValue, addValueNC, matches } from "./recognizer.ts";
+import { addIP, addPattern, addValue, addValueNC, matches, Recognizer } from "./recognizer.ts";
 import type { AlscanOptions } from "./options.ts";
 import { calculateStartStop, lastReboot, PartialDate } from "./datetime.ts";
 import { DenyReport } from "./deny.ts";
@@ -39,16 +39,6 @@ import { RequestReport } from "./request.ts";
 import type { ScanFile } from "./scanfile.ts";
 import { SummaryReport } from "./summary.ts";
 import { Tick } from "./tick.ts";
-
-/**
- * Return a validator function used to validate partial date parameters.
- */
-function validateTime(value: string, _dummyPrevious: string): string {
-    if ((value == 'reboot') || PartialDate.isValidFormat(value)) {
-        return value;
-    }
-    throw new InvalidArgumentError(`${value} is not a valid date-time.`);
-}
 
 /**
  * Return a getItem function depending upon the options and category.
@@ -530,6 +520,20 @@ function collectValues(value: string, previous: Array<string>): Array<string> {
 }
 
 /**
+ * Command-line parser that collects zero or more string IP address values.
+ * @param value command-line option value.
+ * @param previous prior value.
+ * @returns new value containing previous and the new item.
+ */
+function collectIPValues(value: string, previous: Array<string>): Array<string> {
+    const hostMatch = Recognizer.ipv4maskPattern.exec(value);
+    if (hostMatch === null) {
+        throw new InvalidArgumentError(`${value} is not in IP xxx.xxx.xxx.xxx/nn format`);
+    }
+    return previous.concat([value]);
+}
+
+/**
  * Command-line parser for a time-slot (value is a positive integer number of seconds)
  * @param value command-line option value.
  * @param _previous prior value (ignored)
@@ -557,6 +561,15 @@ function parseTop(value: string, _previous: number): number {
     return n;
 }
 
+/**
+ * Return a validator function used to validate partial date parameters.
+ */
+function validateTime(value: string, _dummyPrevious: string): string {
+    if ((value == 'reboot') || PartialDate.isValidFormat(value)) {
+        return value;
+    }
+    throw new InvalidArgumentError(`${value} is not a valid date-time.`);
+}
 
 /**
  * all options get defined here. they are added to specific commands when necessary.
@@ -613,7 +626,7 @@ export function cliOptions(hasDomains: boolean): CliOptions {
         agent: new Option('--agent, --user-agent <name>', 'Match exact user-agent string').argParser(collectValues).default([], 'none'),
         code: new Option('--code <value>', 'Match HTTP status code').argParser(collectValues).default([], 'none'),
         group: new Option('--group <name>', '(deprecated) Match User-agent group name').argParser(collectValues).default([], 'none'),
-        ip: new Option('--ip <addr>', 'Match request IP address').argParser(collectValues).default([], 'none'),
+        ip: new Option('--ip <addr>', 'Match request IP address').argParser(collectIPValues).default([], 'none'),
         matchAgent: new Option('--match-agent, --match-user-agent <regexp>', 'Match user-agent regular expression').argParser(collectValues).default([], 'none'),
         matchReferer: new Option('--match-referrer, --match-referer <regexp>', 'Match referer regular expression').argParser(collectValues).default([], 'none'),
         matchUrl: new Option('--match-uri, --match-url <regexp>', 'Match URL regular expression').argParser(collectValues).default([], 'none'),
@@ -623,32 +636,34 @@ export function cliOptions(hasDomains: boolean): CliOptions {
         url: new Option('--uri, --url <url>', 'Match exact URL string').argParser(collectValues).default([], 'none'),
 
         // Log Selection Options
-        account: new Option('--account <name>', 'Scan logs for named account').argParser(collectValues).default([]),
+        account: new Option('--account <name>', 'Scan logs for named account').argParser(collectValues).default([], 'none'),
         alllogs: new Option('--alllogs', 'Scan all known access logs (vhosts, main, panel)'),
         archive: new Option('--archive', 'Include archived logs'),
         directory: new Option('--dir, --directory <name>', 'Scan access logs in directory').argParser(collectValues).default([]),
-        domain: new Option('--domain <name>', 'Scan log of named domain').argParser(collectValues).default([]),
-        domlogs: new Option('--domlogs, --vhosts', 'Scan all vhost access logs'),
-        file: new Option('--file <name>', 'Scan log file').argParser(collectValues).default([]),
+        domain: new Option('--domain <name>', 'Scan log of named domain').argParser(collectValues).default([], 'none'),
+        domlogs: new Option('--vhosts, --domlogs', 'Scan all vhost access logs'),
+        file: new Option('--file <name>', 'Scan log file').argParser(collectValues).default([], 'none'),
         main: new Option('--main', 'Scan default (no vhost) access log'),
         panel: new Option('--panel', 'Scan panel access log'),
 
         // Feedback (deprecated) Options
-        feedbackType: new Option('--feedback-type <name>', 'ignored option').hideHelp(),
-        feedbackUrl: new Option('--feedback-url <url>', 'ignored option').hideHelp(),
+        feedbackType: new Option('--feedback-type <name>', '(deprecated) ignored option').hideHelp(),
+        feedbackUrl: new Option('--feedback-url <url>', '(deprecated) ignored option').hideHelp(),
     };
 }
 
 /**
  * Interface to the control panels (if any.)
  */
-const panels = new Panels();
+const defaultPanels = new Panels();
 
 /**
  * Create a command-line parser.
  * @returns Commander command-line parser.
  */
-export function createParser(): Command<[Array<string>], {}, {}> {
+export function createParser(
+    panels: Panels = defaultPanels
+): Command<[Array<string>], {}, {}> {
     const options = cliOptions(panels.hasDomains());
     if (!panels.hasAccounts()) {
         options.account.hidden = true;
@@ -752,6 +767,7 @@ To report problems, use:
 export async function gatherAlscanOptions(
     names: Array<string>,
     options: Record<string, unknown>,
+    panels: Panels = defaultPanels,
 ): Promise<AlscanOptions> {
     const panelOptions: AlscanOptions = {
         alllogs: panels.hasMainLog() && !!options['alllogs'],
@@ -767,8 +783,7 @@ export async function gatherAlscanOptions(
         (Array.isArray(options['account']))) {
         panelOptions.accounts = options['account'];
     }
-    if (panels.hasDomains() &&
-        ('directory' in options) &&
+    if (('directory' in options) &&
         (Array.isArray(options['directory']))) {
         panelOptions.directories = options['directory'];
     }
@@ -807,11 +822,11 @@ export async function gatherAlscanOptions(
         panelOptions.timeSlot = 60 * 60;
     } else if (!!options['minutes']) {
         panelOptions.timeSlot = 60;
-    } else if (typeof options['timeSlot'] === 'number') {
-        panelOptions.timeSlot = options['timeSlot'];
     } else if (!!options['downtime']) {
         // downtime report defaults to one minute time slot
         panelOptions.timeSlot = 60;
+    } else if (typeof options['timeSlot'] === 'number') {
+        panelOptions.timeSlot = options['timeSlot'];
     }
     const sse = calculateStartStop(partialStart, partialStop, panelOptions.timeSlot ?? 3600);
     if (sse.errors.length > 0) {
@@ -844,7 +859,7 @@ async function run(
         return;
     }
     setupRecognizer(options);
-    const files = await panels.findScanFiles(alscanOptions);
+    const files = await defaultPanels.findScanFiles(alscanOptions);
     //console.log({names, options, alscanOptions, files});
 
     if (files.length === 0) {
@@ -868,7 +883,7 @@ async function run(
  * @returns 0
  */
 export async function main(): Promise<number> {
-    await panels.load();
+    await defaultPanels.load();
 
     const cli = createParser().action(run);
 

@@ -28,8 +28,10 @@ type AN_OP = 'and' | 'or';
 type Item = any;
 export type RecognizerFunc = (field: unknown) => boolean;
 
+type RecognizerField = 'top' | keyof AccessLogEntry;
+
 export class Recognizer {
-    field: keyof AccessLogEntry;
+    field: RecognizerField;
     op?: AN_OP;
     operands?: Array<Item>;
     func?: RecognizerFunc | undefined;
@@ -41,7 +43,7 @@ export class Recognizer {
      *  @param op is either AND_OP or OR_OP to create a collection of recognizers.
      */
     constructor(
-        field: keyof AccessLogEntry,
+        field: RecognizerField,
         func?: RecognizerFunc,
         op?: AN_OP,
     ) {
@@ -70,7 +72,7 @@ export class Recognizer {
      *  @param field to check.
      *  @param item.
      */
-    addItem(field: keyof AccessLogEntry, item: Item): void {
+    addItem(field: RecognizerField, item: Item): void {
         if (!this.isCollection() || !Array.isArray(this.operands)) {
             throw new TypeError('Cannot add to a non-collection recognizer.');
         }
@@ -104,7 +106,7 @@ export class Recognizer {
             }
             return false;
         }
-        if (this.func) {
+        if (this.func && (this.field !== 'top')) {
             return this.func(record[this.field]);
         }
         return false;
@@ -120,7 +122,7 @@ export class Recognizer {
     /** Regular expression of an IPv4 dotted decimal address. */
     static ipv4Pattern: RegExp = new RegExp(/(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/);
     /** Regular expression of an IPv4 dotted decimal address with CIDR mask. */
-    static ipv4maskPattern: RegExp = new RegExp(/(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})(\/(\d{1,2}))?/);
+    static ipv4maskPattern: RegExp = new RegExp(/(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})(\/(\d{1,2}))?$/);
 
     static ipMatch(host: string, addressMask: string): boolean {
         const hostMatch = Recognizer.ipv4Pattern.exec(host);
@@ -128,10 +130,10 @@ export class Recognizer {
             return host == addressMask;       // only match numeric IPv4 (for now)
         }
         const addressMatch = Recognizer.ipv4maskPattern.exec(addressMask);
-        if ((addressMatch === null) || (addressMatch[5] === undefined)) {
+        if ((addressMatch === null) || (addressMatch[5] === undefined) || (addressMatch[6] === undefined)) {
             return host == addressMask;
         }
-        const bits = parseInt(addressMatch[6] ?? '', 10);
+        const bits = parseInt(addressMatch[6], 10);
         if (Number.isNaN(bits) || (bits <= 0) || (bits >= 32)) {
             return host == addressMask;
         }
@@ -153,14 +155,14 @@ export class Recognizer {
 
 }
 
-const recognizer = new Recognizer('ident', undefined, AND_OP);
+const recognizer = new Recognizer('top', undefined, AND_OP);
 
 /**
  *  Add an exact value match recognizer.
  *  @param field to match.
  *  @param value to match.
  */
-export function addValue(field: keyof AccessLogEntry, value: unknown): void {
+export function addValue(field: RecognizerField, value: unknown): void {
     const item = new Recognizer(field, (v) => (v == value));
     recognizer.addItem(field, item);
 }
@@ -170,7 +172,7 @@ export function addValue(field: keyof AccessLogEntry, value: unknown): void {
  *  @param field to match.
  *  @param value to match.
  */
-export function addValueNC(field: keyof AccessLogEntry, value: unknown): void {
+export function addValueNC(field: RecognizerField, value: unknown): void {
     if (value) {
         const lcValue = value.toString().toLowerCase();
         const item = new Recognizer(field,
@@ -184,7 +186,7 @@ export function addValueNC(field: keyof AccessLogEntry, value: unknown): void {
  *  @param field to match.
  *  @param pattern RegExp to match.
  */
-export function addPattern(field: keyof AccessLogEntry, pattern: RegExp | string): void {
+export function addPattern(field: RecognizerField, pattern: RegExp | string): void {
     if (pattern instanceof RegExp) {
         const item = new Recognizer(field, (v) => pattern.test(v ? v.toString() : ''));
         recognizer.addItem(field, item);
