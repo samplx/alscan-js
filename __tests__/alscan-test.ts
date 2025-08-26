@@ -60,10 +60,6 @@ interface GatherTestCase {
 const panels = new Panels();
 
 describe('alscan', async () => {
-    test.todo('need some tests', () => {
-        assert.ok(true);
-    });
-
     describe('createParser()', () => {
         const cases: Array<ParserTestCase> = [
             {
