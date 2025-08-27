@@ -2354,7 +2354,7 @@ var Panels = class {
 // package.json
 var package_default = {
   name: "alscan-js",
-  version: "0.5.2",
+  version: "0.5.3",
   description: "An access log scanner.",
   homepage: "https://samplx.org/alscan/",
   type: "module",
@@ -2385,7 +2385,7 @@ var package_default = {
   },
   preferGlobal: true,
   scripts: {
-    build: "esbuild bin/alscan-cli.ts --bundle --platform=neutral --packages=external --target=node22.0 > bin/alscan-cli.js",
+    build: "esbuild bin/alscan-cli.ts --bundle --platform=neutral --packages=external --target=node20.0 > bin/alscan-cli.js",
     test: "node --test"
   },
   directories: {
@@ -2406,7 +2406,7 @@ var package_default = {
     typescript: "^5.9.2"
   },
   engines: {
-    node: ">= 22.18"
+    node: ">= 20.0"
   },
   devDependencies: {
     "@tsconfig/node-ts": "^23.6.1"
