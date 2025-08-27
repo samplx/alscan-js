@@ -1,6 +1,6 @@
 {
     "name": "alscan-js",
-    "version": "0.5.1",
+    "version": "0.5.2",
     "description": "An access log scanner.",
     "homepage": "https://samplx.org/alscan/",
     "type": "module",
@@ -19,18 +19,19 @@
             "email": "jb@samplx.org"
         }
     ],
-    "main": "./bin/alscan-cli.ts",
+    "main": "./bin/alscan-cli.js",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/samplx/alscan-js.git"
     },
     "license": "Apache-2.0",
     "bin": {
-        "alscan": "bin/alscan-cli.ts",
-        "alscan-js": "bin/alscan-cli.ts"
+        "alscan": "bin/alscan-cli.js",
+        "alscan-js": "bin/alscan-cli.js"
     },
     "preferGlobal": true,
     "scripts": {
+        "build": "esbuild bin/alscan-cli.ts --bundle --platform=neutral --packages=external --target=node22.0 > bin/alscan-cli.js",
         "test": "node --test"
     },
     "directories": {
@@ -45,6 +46,7 @@
         "@types/js-yaml": "^4.0.9",
         "@types/node": "^22.15.30",
         "commander": "^14.0.0",
+        "esbuild": "^0.25.9",
         "js-yaml": "4.1.0",
         "sort-on": "^6.1.0",
         "typescript": "^5.9.2"
